@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OKR 管理平台 · 任务管理</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/element-plus@2/dist/index.full.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2/dist/index.css">
+<style>
+:root{
+  --P:#3A2AE4;--PL:#ECF1FF;--PH:#2E21BF;
+  --G:#00B42A;--GL:#E8FFEA;
+  --W:#FF7D00;--WL:#FFF7E8;
+  --E:#E12535;--EL:#FFECE8;
+  --T1:#262629;--T2:#666672;--T3:#A0A0A8;
+  --BD:#E5E6EB;--BG:#F6F6F8;--CD:#FFFFFF
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans SC',sans-serif;background:var(--BG);color:var(--T1);font-size:14px;min-height:100vh}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:#D0D0D8;border-radius:2px}
+
+.app{display:flex;height:100vh;overflow:hidden}
+
+/* sidebar */
+.sb{width:220px;background:#fff;border-right:1px solid var(--BD);display:flex;flex-direction:column;flex-shrink:0}
+.sb-top{height:56px;padding:0 20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--BD)}
+.sb-logo{width:32px;height:32px;background:linear-gradient(135deg,#3A2AE4,#6B5DF0);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px}
+.sb-usr{padding:16px 20px;border-bottom:1px solid var(--BD);display:flex;align-items:center;gap:10px}
+.sb-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#ECF1FF,#C5C0F8);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--P)}
+.sb-nav{flex:1;padding:12px 0;overflow-y:auto}
+.ni{height:40px;padding:0 20px;display:flex;align-items:center;gap:10px;cursor:pointer;color:var(--T2);font-size:13px;transition:all .15s;border-right:2px solid transparent}
+.ni:hover{background:var(--PL);color:var(--P)}
+.ni.on{background:var(--PL);color:var(--P);font-weight:500;border-right-color:var(--P)}
+.nb{margin-left:auto;background:var(--E);color:#fff;font-size:10px;font-weight:600;padding:1px 5px;border-radius:8px;min-width:18px;text-align:center}
+
+/* main */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.tb{height:56px;background:#fff;border-bottom:1px solid var(--BD);padding:0 24px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.tb-title{font-size:15px;font-weight:600}
+
+/* filter bar */
+.fb{background:#fff;border-bottom:1px solid var(--BD);padding:10px 24px;display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap}
+
+/* view toggle */
+.vt{display:flex;border:1px solid var(--BD);border-radius:6px;overflow:hidden}
+.vtb{height:32px;padding:0 14px;cursor:pointer;font-size:13px;font-family:inherit;display:flex;align-items:center;gap:5px;border:none;background:#fff;color:var(--T2);transition:all .15s}
+.vtb+.vtb{border-left:1px solid var(--BD)}
+.vtb.on{background:var(--PL);color:var(--P);font-weight:500}
+
+/* pills */
+.pills{display:flex;gap:5px}
+.pl{height:26px;padding:0 10px;border-radius:13px;font-size:12px;display:inline-flex;align-items:center;gap:4px;cursor:pointer;border:1px solid transparent;white-space:nowrap;transition:all .15s}
+.pl-a{background:#F2F3F5;color:var(--T2)}
+.pl-a.on{background:var(--PL);color:var(--P);border-color:#C5C0F8}
+.pl-d{background:#FFF7E8;color:var(--W)}
+.pl-d.on{border-color:#FFD591}
+.pl-c{background:#E8FFEA;color:var(--G)}
+.pl-c.on{border-color:#95DE64}
+.pl-p{background:#F2F3F5;color:var(--T3)}
+.pl-p.on{border-color:var(--BD)}
+
+/* inputs */
+.fi{height:32px;border:1px solid var(--BD);border-radius:6px;padding:0 10px;font-size:13px;font-family:inherit;color:var(--T1);outline:none;transition:border-color .15s;background:#fff}
+.fi:focus{border-color:var(--P);box-shadow:0 0 0 2px rgba(58,42,228,.08)}
+.si-w{position:relative}
+.si-w .si{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--T3);pointer-events:none}
+
+/* buttons */
+.btn{height:32px;padding:0 16px;border-radius:6px;font-size:13px;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-weight:500;transition:all .15s;border:none;white-space:nowrap}
+.btn-p{background:var(--P);color:#fff}
+.btn-p:hover{background:var(--PH)}
+.btn-d{background:#fff;border:1px solid var(--BD);color:var(--T1)}
+.btn-d:hover{border-color:var(--P);color:var(--P)}
+.btn-ai{background:linear-gradient(135deg,#3A2AE4,#6B5DF0);color:#fff;box-shadow:0 2px 8px rgba(58,42,228,.3)}
+.btn-ai:hover{box-shadow:0 4px 16px rgba(58,42,228,.4);transform:translateY(-1px)}
+.btn-g{background:transparent;border:1px dashed var(--P);color:var(--P)}
+.btn-g:hover{background:var(--PL)}
+.btn-e{background:var(--E);color:#fff}
+.btn-e:hover{background:#C01E2C}
+
+/* tags */
+.tag{height:20px;padding:0 7px;border-radius:4px;font-size:11px;font-weight:500;display:inline-flex;align-items:center;white-space:nowrap}
+.t-b{background:#ECF1FF;color:#3A2AE4}
+.t-g{background:#E8FFEA;color:#00B42A}
+.t-a{background:#FFFBEC;color:#875800}
+.t-r{background:#FFECE8;color:#E12535}
+.t-n{background:#F2F3F5;color:#666672}
+
+/* content */
+.ct{flex:1;overflow-y:auto;padding:20px 24px}
+
+/* list table */
+.lw{background:var(--CD);border-radius:8px;border:1px solid var(--BD);overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.lt{width:100%;border-collapse:collapse}
+.lt th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--T3);background:#F4F5FB;border-bottom:1px solid var(--BD);white-space:nowrap;cursor:pointer;user-select:none;transition:background .12s}
+.lt th:hover{background:#EEEEF8;color:var(--P)}
+.lt th.srt{color:var(--P)}
+.lt td{padding:11px 14px;border-bottom:1px solid #F0F0F6;font-size:12px;vertical-align:middle;cursor:pointer;transition:background .12s}
+.lt tr:hover td{background:#F7F8FF}
+.lt tr:last-child td{border-bottom:none}
+.tid{font-size:11px;color:var(--T3);font-family:monospace}
+.tn{font-size:13px;font-weight:500;color:var(--T1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px}
+.ts{font-size:11px;color:var(--T3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px;margin-top:2px}
+.sc{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:22px;border-radius:4px;font-size:12px;font-weight:700;padding:0 5px}
+.sc-h{background:#E8FFEA;color:#00B42A}
+.sc-m{background:#FFFBEC;color:#875800}
+.sc-l{background:#FFECE8;color:#E12535}
+.pc{display:flex;align-items:center;gap:6px}
+.pt{width:56px;height:4px;background:#EEEEF2;border-radius:2px;overflow:hidden}
+.pf{height:100%;border-radius:2px;background:linear-gradient(90deg,#3A2AE4,#6B5DF0)}
+
+/* pagination */
+.pgb{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid var(--BD);background:#FAFBFF}
+.pgn{display:flex;gap:4px}
+.pgbtn{width:28px;height:28px;border-radius:5px;border:1px solid var(--BD);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--T2);transition:all .12s}
+.pgbtn:hover{border-color:var(--P);color:var(--P)}
+.pgbtn.on{background:var(--P);color:#fff;border-color:var(--P)}
+
+/* kanban */
+.kbw{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:start}
+.kbc{border-radius:8px;background:#F4F5FB;border:1px solid var(--BD);display:flex;flex-direction:column;min-height:480px;transition:border-color .2s}
+.kbc.dov{border-color:var(--P);background:#EEF0FF}
+.kbch{padding:12px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--BD)}
+.kbcd{width:8px;height:8px;border-radius:50%}
+.kbct{font-size:13px;font-weight:600;flex:1}
+.kbcn{font-size:12px;color:var(--T2);background:#fff;border:1px solid var(--BD);border-radius:10px;padding:1px 8px}
+.kbb{padding:10px;display:flex;flex-direction:column;gap:8px;flex:1}
+.kbk{background:var(--CD);border-radius:7px;border:1px solid var(--BD);padding:12px;cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04);position:relative;overflow:hidden;user-select:none}
+.kbk::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:7px 7px 0 0}
+.kbk.k-p::before{background:var(--T3)}
+.kbk.k-d::before{background:var(--W)}
+.kbk.k-c::before{background:var(--G)}
+.kbk:hover{box-shadow:0 4px 14px rgba(58,42,228,.1);transform:translateY(-1px);border-color:rgba(58,42,228,.2)}
+.kbk.dragging{opacity:.45;transform:scale(.97)}
+.kbkn{font-size:12px;font-weight:500;color:var(--T1);line-height:1.45;margin-bottom:8px}
+.kbkm{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.kbkf{display:flex;align-items:center;justify-content:space-between}
+.kbo{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--T2)}
+.kbd{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff}
+.kbmt{font-size:11px;color:var(--T3)}
+.kbadd{display:flex;align-items:center;justify-content:center;gap:5px;padding:8px;border:1px dashed var(--BD);border-radius:6px;cursor:pointer;color:var(--T3);font-size:12px;margin:0 10px 10px;transition:all .15s}
+.kbadd:hover{border-color:var(--P);color:var(--P);background:var(--PL)}
+.kbem{padding:28px 16px;text-align:center;color:var(--T3);font-size:12px}
+
+/* overlay + drawer */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.32);z-index:998;opacity:0;pointer-events:none;transition:opacity .25s}
+.ov.on{opacity:1;pointer-events:all}
+.dr{position:fixed;top:0;right:0;bottom:0;background:var(--CD);z-index:999;box-shadow:-6px 0 30px rgba(0,0,0,.12);transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1),width .25s ease;display:flex;flex-direction:column;overflow:hidden;width:620px}
+.dr.on{transform:translateX(0)}
+.dr.wide{width:880px}
+.dr-hd{padding:18px 24px 0;border-bottom:1px solid var(--BD);flex-shrink:0}
+.dr-top{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.dr-tit{font-size:15px;font-weight:600;flex:1}
+.dr-cls{width:28px;height:28px;border-radius:6px;border:1px solid var(--BD);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--T2);transition:all .15s}
+.dr-cls:hover{background:var(--EL);color:var(--E);border-color:var(--E)}
+.dr-tabs{display:flex}
+.drt{height:38px;padding:0 16px;cursor:pointer;font-size:13px;color:var(--T2);border-bottom:2px solid transparent;transition:all .15s;display:flex;align-items:center}
+.drt.on{color:var(--P);border-bottom-color:var(--P);font-weight:500}
+
+/* drawer split */
+.dr-sp{display:flex;flex:1;overflow:hidden}
+.dr-fm{flex:1;overflow-y:auto;padding:20px 24px}
+.dr-ai{width:270px;flex-shrink:0;background:linear-gradient(180deg,#F5F3FF,#EEF2FF);border-left:1px solid #C5C0F8;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.dr-bd{flex:1;overflow-y:auto;padding:20px 24px}
+.dr-ft{padding:14px 24px;border-top:1px solid var(--BD);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0}
+
+/* form */
+.fs{margin-bottom:16px}
+.fs-t{font-size:11px;font-weight:600;color:var(--T3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--BD)}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fg1{grid-template-columns:1fr}
+.fi2{display:flex;flex-direction:column;gap:4px}
+.fl{font-size:12px;color:var(--T2);font-weight:500}
+.req{color:var(--E);margin-left:2px}
+.finp,.fsel{height:32px;border:1px solid var(--BD);border-radius:6px;padding:0 10px;font-size:13px;font-family:inherit;color:var(--T1);outline:none;transition:border-color .15s;background:#fff;width:100%}
+.finp:focus,.fsel:focus{border-color:var(--P);box-shadow:0 0 0 2px rgba(58,42,228,.08)}
+.fta{border:1px solid var(--BD);border-radius:6px;padding:9px;font-size:13px;font-family:inherit;color:var(--T1);outline:none;resize:vertical;min-height:60px;width:100%;transition:border-color .15s;line-height:1.6}
+.fta:focus{border-color:var(--P);box-shadow:0 0 0 2px rgba(58,42,228,.08)}
+
+/* scoring */
+.sdw{display:flex;flex-direction:column;gap:12px}
+.sdr{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:#F9FAFF;border-radius:8px;border:1px solid var(--BD)}
+.sdl{display:flex;flex-direction:column;gap:4px;width:82px;flex-shrink:0}
+.sdn{font-size:13px;font-weight:500;color:var(--T1)}
+.sdw2{font-size:10px;color:var(--P);font-weight:600}
+.stars{display:flex;align-items:center;gap:3px;flex:1}
+.star{font-size:22px;cursor:pointer;transition:transform .1s,color .1s;line-height:1;color:#E5E6EB}
+.star.on{color:#FFB800}
+.star:hover{transform:scale(1.18)}
+.sv{font-size:15px;font-weight:700;color:var(--P);width:22px;text-align:center;flex-shrink:0}
+.hb{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--T3);background:transparent;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--T3);transition:all .15s;flex-shrink:0;line-height:1;margin-top:2px}
+.hb:hover{border-color:var(--P);color:var(--P);background:var(--PL)}
+.ptb{width:100%;border-collapse:collapse}
+.ptb tr{border-bottom:1px solid #F0F0F6}
+.ptb tr:last-child{border-bottom:none}
+.ptb td{padding:6px 8px;font-size:11px;line-height:1.5;vertical-align:top}
+.psc{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:4px;font-size:10px;font-weight:700;color:#fff;margin-right:4px}
+.stb{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:linear-gradient(135deg,#ECF1FF,#E8E5FF);border-radius:8px;border:1px solid #C5C0F8;margin-top:4px}
+.stn{font-size:34px;font-weight:900;line-height:1}
+
+/* AI panel */
+.ai-hd{font-size:12px;font-weight:700;color:var(--P);display:flex;align-items:center;gap:5px;margin-bottom:4px}
+.ai-tot{text-align:center;padding:14px;background:#fff;border-radius:10px;border:2px solid var(--P)}
+.ai-tn{font-size:38px;font-weight:900;line-height:1}
+.ai-ts{font-size:11px;color:var(--T2);margin-top:2px}
+.ai-fo{font-size:10px;color:var(--T3);text-align:center;background:#F9FAFB;padding:6px;border-radius:5px}
+.ai-dc{background:#fff;border-radius:8px;border:1px solid #C5C0F8;padding:10px 12px}
+.ai-dh{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.ai-dl{font-size:12px;font-weight:600;color:var(--T1)}
+.ai-ds{display:flex;align-items:center;gap:5px}
+.ai-dst{color:#FFB800;font-size:13px;letter-spacing:.5px}
+.ai-dn{font-size:15px;font-weight:800;color:var(--P)}
+.ai-dr{font-size:10px;font-weight:600;color:var(--P);background:var(--PL);padding:1px 7px;border-radius:10px;margin-bottom:5px;display:inline-block}
+.ai-dd{font-size:11px;color:var(--T2);line-height:1.65}
+.ai-ab{width:100%;height:34px;border-radius:6px;background:var(--P);color:#fff;border:none;cursor:pointer;font-size:13px;font-family:inherit;font-weight:500;display:flex;align-items:center;justify-content:center;gap:6px}
+.ai-ab:hover{background:var(--PH)}
+.ald{display:flex;flex-direction:column;align-items:center;padding:24px 0;gap:12px}
+.dots{display:flex;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--P);animation:bnc .8s infinite}
+.dot:nth-child(2){animation-delay:.15s}
+.dot:nth-child(3){animation-delay:.3s}
+@keyframes bnc{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-6px);opacity:1}}
+
+/* timeline */
+.tli{display:flex;gap:12px;padding-bottom:16px;position:relative}
+.tli:last-child{padding-bottom:0}
+.tli:not(:last-child)::before{content:'';position:absolute;left:9px;top:20px;bottom:0;width:2px;background:var(--BD)}
+.tld{width:20px;height:20px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;margin-top:1px;position:relative;z-index:1}
+.tld-p{background:var(--P)}.tld-s{background:var(--G)}.tld-g{background:var(--T3)}
+.tld2{font-size:11px;color:var(--T3);margin-bottom:3px}
+.tlt{font-size:13px;color:var(--T1);line-height:1.6}
+.tlr{font-size:11px;color:var(--T2);background:#F6F6F8;border-radius:4px;padding:5px 9px;margin-top:4px;border-left:3px solid var(--P)}
+
+/* modal */
+.mov{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1100;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.mov.on{opacity:1;pointer-events:all}
+.mo{background:#fff;border-radius:12px;width:460px;max-width:92vw;box-shadow:0 8px 40px rgba(0,0,0,.15);transform:scale(.96);transition:transform .2s}
+.mov.on .mo{transform:scale(1)}
+.mo-hd{padding:20px 24px 14px;border-bottom:1px solid var(--BD);display:flex;align-items:center;gap:10px}
+.mo-tit{font-size:15px;font-weight:600;flex:1}
+.mo-bd{padding:20px 24px}
+.mo-ft{padding:14px 24px;border-top:1px solid var(--BD);display:flex;justify-content:flex-end;gap:8px}
+.mo-w{background:#FFF7E8;border:1px solid #FFD591;border-radius:6px;padding:10px 14px;font-size:12px;color:#875800;margin-bottom:14px;line-height:1.6}
+
+/* EP overrides */
+.el-popper{z-index:9999!important}
+.el-popover.el-popper{z-index:9999!important}
+.el-popover__reference-wrapper{display:contents}
+</style>
+</head>
+<body>
+<div id="app">
+<div class="app">
+
+  <aside class="sb">
+    <div class="sb-top">
+      <div class="sb-logo">OKR</div>
+      <div style="line-height:1.25">
+        <div style="font-size:13px;font-weight:600">OKR 管理平台</div>
+        <div style="font-size:11px;color:var(--T2)">中国一汽</div>
+      </div>
+    </div>
+    <div class="sb-usr">
+      <div class="sb-av">华</div>
+      <div style="line-height:1.3">
+        <div style="font-size:13px;font-weight:500">华莹莹</div>
+        <div style="font-size:11px;color:var(--T2)">2026 全年</div>
+      </div>
+    </div>
+    <nav class="sb-nav">
+      <div v-for="n in navItems" :key="n.key" :class="n.key===activeNav?'ni on':'ni'" @click="goNav(n)">
+        <span>{{n.icon}}</span><span>{{n.label}}</span>
+        <span v-if="n.badge" class="nb">{{n.badge}}</span>
+      </div>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="tb">
+      <span class="tb-title">任务管理</span>
+    </header>
+
+    <div class="fb">
+      <div class="vt">
+        <button :class="viewMode==='list'?'vtb on':'vtb'" @click="viewMode='list'">☰ 列表</button>
+        <button :class="viewMode==='kanban'?'vtb on':'vtb'" @click="viewMode='kanban'">⬛ 看板</button>
+      </div>
+      <div class="pills">
+        <div :class="filterStatus===''?'pl pl-a on':'pl pl-a'" @click="filterStatus=''">全部 <b>{{allTasks.length}}</b></div>
+        <div :class="filterStatus==='进行中'?'pl pl-d on':'pl pl-d'" @click="filterStatus='进行中'">进行中 <b>{{sc('进行中')}}</b></div>
+        <div :class="filterStatus==='已完成'?'pl pl-c on':'pl pl-c'" @click="filterStatus='已完成'">已完成 <b>{{sc('已完成')}}</b></div>
+        <div :class="filterStatus==='待处理'?'pl pl-p on':'pl pl-p'" @click="filterStatus='待处理'">待处理 <b>{{sc('待处理')}}</b></div>
+      </div>
+      <select class="fi" style="width:120px" v-model="filterTeam">
+        <option value="">全部团队</option>
+        <option v-for="t in teamOpts" :key="t" :value="t">{{t}}</option>
+      </select>
+      <div class="si-w" style="flex:1;max-width:260px">
+        <span class="si" style="font-size:13px">🔍</span>
+        <input class="fi" style="width:100%;padding-left:32px" placeholder="搜索任务名称 / ID..." v-model="searchText"/>
+      </div>
+      <div style="margin-left:auto">
+        <button class="btn btn-p" @click="openDr(null)">＋ 新建任务</button>
+      </div>
+    </div>
+
+    <div class="ct">
+
+      <template v-if="viewMode==='list'">
+        <div class="lw">
+          <table class="lt">
+            <thead>
+              <tr>
+                <th @click="srtBy('id')" :class="srtKey==='id'?'srt':''">任务ID</th>
+                <th @click="srtBy('name')" :class="srtKey==='name'?'srt':''">任务名称</th>
+                <th @click="srtBy('team')" :class="srtKey==='team'?'srt':''">归属团队</th>
+                <th @click="srtBy('score')" :class="srtKey==='score'?'srt'+'':''" style="width:82px">价值系数</th>
+                <th style="width:76px">状态</th>
+                <th @click="srtBy('hours')" :class="srtKey==='hours'?'srt':''">工时投入</th>
+                <th @click="srtBy('tpct')" :class="srtKey==='tpct'?'srt':''">团队内占比</th>
+                <th @click="srtBy('pct')" :class="srtKey==='pct'?'srt':''">部门工时占比</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="task in pagedTasks" :key="task.id" @click="openDr(task)">
+                <td><span class="tid">{{task.id.slice(-6)}}</span></td>
+                <td>
+                  <div class="tn" :title="task.name">{{task.name}}</div>
+                  <div class="ts" v-if="task.kr">↑ {{task.kr.slice(0,38)}}</div>
+                </td>
+                <td><span class="tag t-n" style="height:18px;font-size:10px">{{task.team}}</span></td>
+                <td><span :class="scoreClass(task.score)">{{task.score}}</span></td>
+                <td><span :class="stClass(task.status)" style="height:18px;font-size:10px">{{task.status}}</span></td>
+                <td>
+                  <div class="pc">
+                    <div class="pt"><div class="pf" :style="{width:Math.min(task.hours/200*100,100)+'%'}"></div></div>
+                    <span style="font-size:11px;color:var(--T2)">{{task.hours}}h</span>
+                  </div>
+                </td>
+                <td><span :style="tpStyle(tpct(task))">{{tpct(task)}}%</span></td>
+                <td><span :style="pStyle(task.pct)">{{task.pct}}%</span></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="pgb">
+            <div style="font-size:12px;color:var(--T2)">共 <b>{{filtered.length}}</b> 条 · 第 {{curPg}}/{{totPg}} 页</div>
+            <div class="pgn">
+              <button class="pgbtn" @click="curPg=Math.max(1,curPg-1)">‹</button>
+              <button v-for="p in pgNums" :key="p" :class="p===curPg?'pgbtn on':'pgbtn'" @click="curPg=p">{{p}}</button>
+              <button class="pgbtn" @click="curPg=Math.min(totPg,curPg+1)">›</button>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <template v-if="viewMode==='kanban'">
+        <div class="kbw">
+          <div v-for="col in kbCols" :key="col.status"
+            :class="dragOv===col.status?'kbc dov':'kbc'"
+            @dragover.prevent="dragOv=col.status"
+            @dragleave="dragOv=''"
+            @drop="onDrop(col.status)">
+            <div class="kbch">
+              <div class="kbcd" :style="{background:col.color}"></div>
+              <div class="kbct">{{col.status}}</div>
+              <span class="kbcn">{{kbList(col.status).length}}</span>
+            </div>
+            <div class="kbb">
+              <div v-if="kbList(col.status).length===0" class="kbem">暂无任务</div>
+              <div v-for="task in kbList(col.status)" :key="task.id"
+                :class="dragId===task.id?'kbk '+col.cssClass+' dragging':'kbk '+col.cssClass"
+                draggable="true"
+                @dragstart="onDragStart(task)"
+                @dragend="onDragEnd"
+                @click="openDr(task)">
+                <div class="kbkn">{{task.name}}</div>
+                <div class="kbkm">
+                  <span class="tag t-n" style="height:18px;font-size:10px">{{task.team}}</span>
+                  <span :class="scoreClass(task.score)">{{task.score}}</span>
+                </div>
+                <div class="kbkf">
+                  <div class="kbo">
+                    <div class="kbd" :style="{background:oc(task.owner)}">{{task.owner?task.owner[0]:'?'}}</div>
+                    <span>{{task.owner||'—'}}</span>
+                  </div>
+                  <div class="kbmt">{{task.hours}}h</div>
+                </div>
+              </div>
+            </div>
+            <div class="kbadd" @click="openDr(null)">＋ 新建任务</div>
+          </div>
+        </div>
+      </template>
+
+    </div>
+  </div>
+</div>
+
+<div :class="drVisible?'ov on':'ov'" @click="drVisible=false"></div>
+
+<div :class="drVisible?(aiVisible?'dr on wide':'dr on'):'dr'" style="transition:transform .3s cubic-bezier(.4,0,.2,1),width .25s ease">
+  <div class="dr-hd">
+    <div class="dr-top">
+      <div class="dr-tit">
+        <span v-if="mode==='create'">新建任务</span>
+        <span v-else>任务详情 · <span class="tid" style="font-size:13px">{{form.id.slice(-6)}}</span></span>
+      </div>
+      <button class="dr-cls" @click="drVisible=false">✕</button>
+    </div>
+    <div class="dr-tabs">
+      <div :class="drTab==='edit'?'drt on':'drt'" @click="drTab='edit'">Tab A · 详情与编辑</div>
+      <div v-if="mode==='edit'" :class="drTab==='log'?'drt on':'drt'" @click="drTab='log'">Tab B · 变更记录</div>
+    </div>
+  </div>
+
+  <div v-if="drTab==='edit'" class="dr-sp">
+    <div class="dr-fm">
+      <div class="fs">
+        <div class="fs-t">基础信息</div>
+        <div class="fg fg1" style="gap:12px">
+          <div class="fi2">
+            <div class="fl">任务名称 <span class="req">*</span></div>
+            <input class="finp" v-model="form.name" placeholder="请输入任务名称..."/>
+          </div>
+        </div>
+        <div class="fg" style="gap:12px;margin-top:10px">
+          <div class="fi2">
+            <div class="fl">关联KR</div>
+            <select class="fsel" v-model="form.kr">
+              <option value="">请选择</option>
+              <option v-for="k in krOpts" :key="k" :value="k">{{k.length>28?k.slice(0,28)+'…':k}}</option>
+            </select>
+          </div>
+          <div class="fi2">
+            <div class="fl">归属团队 <span class="req">*</span></div>
+            <select class="fsel" v-model="form.team">
+              <option v-for="t in teamOpts" :key="t" :value="t">{{t}}</option>
+            </select>
+          </div>
+          <div class="fi2">
+            <div class="fl">负责人</div>
+            <input class="finp" v-model="form.owner" placeholder="负责人姓名"/>
+          </div>
+          <div class="fi2">
+            <div class="fl">当前状态</div>
+            <select class="fsel" v-model="form.status">
+              <option>待处理</option><option>进行中</option><option>已完成</option>
+            </select>
+          </div>
+          <div class="fi2">
+            <div class="fl">工时投入 (h)</div>
+            <input class="finp" type="number" v-model.number="form.hours" min="0"/>
+          </div>
+        </div>
+      </div>
+
+      <div class="fs">
+        <div class="fs-t" style="display:flex;align-items:center;gap:8px">
+          🎯 任务价值系数评分模型
+          <span style="font-size:10px;color:var(--T3);font-weight:400;background:#F2F3F5;padding:2px 8px;border-radius:10px">
+            权重：重要度×3 + 困难度×3 + 优先度×2 + 领域×1，满分45
+          </span>
+        </div>
+        <div class="sdw">
+          <div v-for="dim in dims" :key="dim.key" class="sdr">
+            <div class="sdl">
+              <div class="sdn">{{dim.label}}</div>
+              <div class="sdw2">权重 ×{{dim.w}}</div>
+            </div>
+            <div class="stars">
+              <span v-for="s in 5" :key="s"
+                :class="s<=(hv[dim.key]||form[dim.key])?'star on':'star'"
+                @click="form[dim.key]=s"
+                @mouseover="hv[dim.key]=s"
+                @mouseleave="hv[dim.key]=0">
+                {{s<=(hv[dim.key]||form[dim.key])?'★':'☆'}}
+              </span>
+              <div class="sv">{{form[dim.key]}}</div>
+            </div>
+            <el-popover placement="right" :width="380" trigger="hover" append-to="body" :teleported="true">
+              <template #reference>
+                <button class="hb">?</button>
+              </template>
+              <template #default>
+                <div>
+                  <div style="font-size:12px;font-weight:700;color:var(--T1);margin-bottom:8px;display:flex;align-items:center;gap:6px">
+                    {{dim.label}} 评分标准
+                    <span style="font-size:10px;color:var(--P);background:var(--PL);padding:1px 7px;border-radius:10px;font-weight:600">权重 ×{{dim.w}}</span>
+                  </div>
+                  <table class="ptb">
+                    <tr v-for="r in dim.rules" :key="r.s">
+                      <td style="width:28px;padding-left:4px">
+                        <span class="psc" :style="{background:r.s===5?'#3A2AE4':r.s===4?'#00B42A':r.s===3?'#FF7D00':r.s===2?'#F59E0B':'#A0A0A8'}">{{r.s}}</span>
+                      </td>
+                      <td style="width:80px;font-weight:600;font-size:11px;color:var(--T1)">{{r.l}}</td>
+                      <td style="color:var(--T2)">{{r.d}}</td>
+                    </tr>
+                  </table>
+                </div>
+              </template>
+            </el-popover>
+          </div>
+        </div>
+        <div class="stb">
+          <div>
+            <div style="font-size:13px;color:var(--T2)">综合价值系数（加权）</div>
+            <div style="font-size:11px;color:var(--T3);margin-top:3px">
+              {{form.imp}}×3 + {{form.diff}}×3 + {{form.prio}}×2 + {{form.scope}}×1 = <b style="color:var(--P)">{{wtotal}}</b>
+            </div>
+          </div>
+          <div style="display:flex;align-items:baseline;gap:4px">
+            <div class="stn" :style="{color:wtotal>=40?'#00B42A':wtotal>=28?'#FF7D00':'#E12535'}">{{wtotal}}</div>
+            <div style="font-size:13px;color:var(--T3)"> / 45</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dr-ai" v-if="aiVisible">
+      <div class="ai-hd">✨ AI 智能打分建议</div>
+      <div v-if="aiLoading" class="ald">
+        <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        <div style="font-size:12px;color:var(--T2);text-align:center">正在对标评分模型<br/>分析任务复杂度...</div>
+      </div>
+      <template v-else>
+        <div class="ai-tot">
+          <div class="ai-tn" :style="{color:aiR.wt>=40?'#00B42A':aiR.wt>=28?'#FF7D00':'#E12535'}">{{aiR.wt}}</div>
+          <div class="ai-ts">综合价值系数 / 45</div>
+        </div>
+        <div class="ai-fo">{{aiR.imp}}×3 + {{aiR.diff}}×3 + {{aiR.prio}}×2 + {{aiR.scope}}×1 = {{aiR.wt}}</div>
+        <div v-for="dim in dims" :key="dim.key" class="ai-dc">
+          <div class="ai-dh">
+            <div class="ai-dl">{{dim.label}}</div>
+            <div class="ai-ds">
+              <span class="ai-dst">
+                <span v-for="s in 5" :key="s">{{s<=aiR[dim.key]?'★':'☆'}}</span>
+              </span>
+              <span class="ai-dn">{{aiR[dim.key]}}</span>
+            </div>
+          </div>
+          <div class="ai-dr">{{dim.rules[aiR[dim.key]-1]?dim.rules[aiR[dim.key]-1].l:'—'}}</div>
+          <div class="ai-dd">{{aiR.reasons?aiR.reasons[dim.key]:''}}</div>
+        </div>
+        <button class="ai-ab" @click="adoptAI">⚡ 一键采纳 AI 评分</button>
+      </template>
+    </div>
+  </div>
+
+  <div v-if="drTab==='log'" class="dr-bd">
+    <div v-if="form.logs&&form.logs.length>0">
+      <div v-for="(log,i) in form.logs" :key="i" class="tli">
+        <div :class="i===0?'tld tld-p':'tld tld-g'">{{i===0?'新':'旧'}}</div>
+        <div style="flex:1">
+          <div class="tld2">{{log.date}}</div>
+          <div class="tlt">{{log.text}}</div>
+          <div v-if="log.reason" class="tlr">原因：{{log.reason}}</div>
+        </div>
+      </div>
+    </div>
+    <div v-else style="text-align:center;padding:40px;color:var(--T3);font-size:13px">暂无变更记录</div>
+  </div>
+
+  <div class="dr-ft">
+    <button class="btn btn-d" @click="drVisible=false">取消</button>
+    <button class="btn btn-g" @click="triggerAI">✨ AI 智能打分</button>
+    <button class="btn btn-p" @click="handleSave">{{mode==='create'?'创建任务':'保存修改'}}</button>
+  </div>
+</div>
+
+<div :class="saveMo?'mov on':'mov'">
+  <div class="mo">
+    <div class="mo-hd">
+      <span style="font-size:18px">⚠️</span>
+      <div class="mo-tit">保存前确认 · 变更原因必填</div>
+    </div>
+    <div class="mo-bd">
+      <div class="mo-w">本次修改将更新已归档的任务数据，操作不可撤销，将自动写入变更日志。</div>
+      <div class="fi2" style="margin-bottom:12px">
+        <div class="fl">变更原因分类 <span class="req">*</span></div>
+        <select class="fsel" v-model="chg.reason">
+          <option value="">请选择</option>
+          <option>业务方向调整</option><option>资源缩减</option><option>难度超预期</option><option>日常迭代</option>
+        </select>
+      </div>
+      <div class="fi2">
+        <div class="fl">真实修改说明 <span class="req">*</span></div>
+        <textarea class="fta" v-model="chg.desc" rows="3" maxlength="200" placeholder="请详细填写变更背景..."></textarea>
+      </div>
+    </div>
+    <div class="mo-ft">
+      <button class="btn btn-d" @click="saveMo=false">返回</button>
+      <button class="btn btn-e" :disabled="!chg.reason||!chg.desc" @click="confirmSave">确认保存</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+const {createApp, ref, computed} = Vue;
+createApp({
+  setup() {
+    const activeNav = ref('tasks');
+    const navItems = [
+      {key:'dashboard', icon:'📊', label:'战略仪表盘', badge:null,  href:'dashboard.html'},
+      {key:'strategy',  icon:'🎯', label:'部门战略',   badge:null,  href:'dept_strategy.html'},
+      {key:'dept-okr',  icon:'🏛️', label:'部门 OKR',  badge:null,  href:'dept_okr.html'},
+      {key:'team-okr',  icon:'👥', label:'团队 OKR',  badge:218,   href:'team_okr.html'},
+      {key:'tasks',     icon:'✅', label:'任务管理',   badge:798,   href:'task_center.html'},
+      {key:'employees', icon:'👤', label:'员工 OKR',  badge:null,  href:'personal_okr.html'},
+    ];
+    const goNav = (item) => { if (item.href) window.location.href = item.href; };
+
+    // score dims — full rubric
+    const dims = [
+      {
+        key:'imp', label:'任务重要度', w:3,
+        rules:[
+          {s:1, l:'日常事务', d:'重复性维护性的日常工作，对OKR无直接影响。'},
+          {s:2, l:'辅助支持', d:'岗位职责内的常规性支撑性工作，对局部效率或质量有影响。'},
+          {s:3, l:'常规贡献', d:'团队内核心交付，支撑稳健改进/危机追赶型OKR。'},
+          {s:4, l:'战略重要', d:'直接支撑团队级突破/维持领先型OKR，有重大战略价值。'},
+          {s:5, l:'战略关键', d:'决定部门战略成败的里程碑，直接支撑部门级OKR，不可缺失。'},
+        ]
+      },
+      {
+        key:'diff', label:'任务困难度', w:3,
+        rules:[
+          {s:1, l:'常规操作', d:'有现成SOP、简单清晰步骤说明，无需专业培训即可完成。'},
+          {s:2, l:'流程执行', d:'有明确SOP和工具模板，需熟练操作按部就班执行。'},
+          {s:3, l:'专业应用', d:'需跨团队协调与技术攻关，有参考方案但需重大修改优化。'},
+          {s:4, l:'公司攻坚', d:'集团内无成功案例，需整合多领域知识或应用前沿技术。'},
+          {s:5, l:'行业攻坚', d:'行业级难题/无前车之鉴，需从0到1创新，原理性研究或技术发明。'},
+        ]
+      },
+      {
+        key:'prio', label:'资源优先度', w:2,
+        rules:[
+          {s:1, l:'后台优化', d:'在无其他任务时进行，主要影响长期效率，不设时间承诺。'},
+          {s:2, l:'弹性安排', d:'中长期价值工作，资源可被高优先级任务临时征用。'},
+          {s:3, l:'计划内保障', d:'按既定计划投入标准资源，确保准时交付，有明确上下游依赖。'},
+          {s:4, l:'高价值加速', d:'需调配优势资源确保按期或提前完成，享有最高调度权。'},
+          {s:5, l:'战略卡点', d:'必须立即集中资源突破，是当前最高优先级战略目标的唯一关键路径。'},
+        ]
+      },
+      {
+        key:'scope', label:'领域范围', w:1,
+        rules:[
+          {s:1, l:'团队内级', d:'在单一团队内部即可完成所有工作和决策。'},
+          {s:2, l:'跨团队级', d:'主要在部门内跨团队协作完成。'},
+          {s:3, l:'跨部门级', d:'涉及2-3个一级部门的正式协同、评审或决策。'},
+          {s:4, l:'集团级', d:'涉及集团内3个以上一级部门或多家分子公司协同。'},
+          {s:5, l:'行业级', d:'成果直接影响行业标准、外部客户/伙伴或开源社区。'},
+        ]
+      },
+    ];
+
+    // task data
+    const allTasks = ref([
+      {id:'4655971974',name:'探索AI全新商业模式',team:'基础平台',kr:'集团公司自主可控能力提升',imp:5,diff:5,prio:5,scope:5,status:'进行中',owner:'黄钰淇',hours:183,pct:9.2,logs:[{date:'2026-03-10',text:'黄钰淇 创建任务',type:'p'}]},
+      {id:'4655973003',name:'成本领先运营',team:'POM',kr:'数字员工及智能体',imp:5,diff:5,prio:5,scope:5,status:'进行中',owner:'段练',hours:48,pct:2.4,logs:[{date:'2026-03-10',text:'段练 创建任务',type:'p'}]},
+      {id:'4655973012',name:'工程领域-工业软件自研专项任务',team:'IPD',kr:'IPD产品链实现软件国产化',imp:5,diff:5,prio:4,scope:4,status:'进行中',owner:'王扬',hours:26,pct:1.3,logs:[{date:'2026-03-11',text:'王扬 创建任务',type:'p'}]},
+      {id:'4655972974',name:'对外服务-长安汽车企业架构管理',team:'数据',kr:'整合沉淀领先的数字化转型产品和服务',imp:5,diff:4,prio:3,scope:3,status:'待处理',owner:'蒋汉卿',hours:55,pct:2.8,logs:[{date:'2026-03-11',text:'蒋汉卿 创建任务',type:'p'}]},
+      {id:'4655973016',name:'2026组织资源服务平台优化迭代',team:'组织',kr:'以组织资源精准配置与高效治理全面支撑集团战略落地',imp:4,diff:4,prio:3,scope:4,status:'进行中',owner:'柳中乔',hours:46,pct:2.3,logs:[{date:'2026-03-12',text:'柳中乔 创建任务',type:'p'},{date:'2026-05-01',text:'柳中乔 更新进展',type:'g',reason:'难度超预期 - 分子公司配合度不足'}]},
+      {id:'4655973014',name:'工程领域-基于数据驱动的工艺设计与开发产品迭代',team:'IPD',kr:'IPD产品链新增4名数字员工',imp:5,diff:5,prio:4,scope:4,status:'已完成',owner:'王扬',hours:193,pct:9.7,logs:[{date:'2026-03-11',text:'王扬 创建任务',type:'p'},{date:'2026-04-30',text:'王扬 完成验收',type:'s'}]},
+      {id:'4655973005',name:'POM性能优化及问题整改',team:'POM',kr:'平台稳定性',imp:5,diff:5,prio:5,scope:5,status:'进行中',owner:'段练',hours:159,pct:8.0,logs:[{date:'2026-03-10',text:'段练 创建任务',type:'p'}]},
+      {id:'4655970041',name:'CSP-客流运营中心',team:'COM',kr:'红旗运营',imp:4,diff:4,prio:3,scope:3,status:'进行中',owner:'徐海强',hours:42,pct:2.1,logs:[{date:'2026-03-15',text:'徐海强 创建任务',type:'p'}]},
+      {id:'4655973013',name:'工程领域-AI场景应用迭代与探索',team:'IPD',kr:'IPD产品链新增7个智能体',imp:5,diff:5,prio:4,scope:4,status:'已完成',owner:'王扬',hours:171,pct:8.6,logs:[{date:'2026-03-11',text:'王扬 创建任务',type:'p'},{date:'2026-04-28',text:'王扬 完成任务验收',type:'s'}]},
+      {id:'4655972999',name:'合并中心运营迭代',team:'POM',kr:'POM平台型集团建设',imp:5,diff:5,prio:5,scope:5,status:'进行中',owner:'段练',hours:128,pct:6.4,logs:[{date:'2026-03-10',text:'段练 创建任务',type:'p'}]},
+      {id:'4655973002',name:'查打一体运营迭代',team:'POM',kr:'POM穿透式监管',imp:5,diff:5,prio:5,scope:5,status:'进行中',owner:'段练',hours:28,pct:1.4,logs:[{date:'2026-03-10',text:'段练 创建任务',type:'p'}]},
+      {id:'4655973040',name:'MS-0512-任务转派中心',team:'ITD',kr:'工作台建设',imp:5,diff:5,prio:5,scope:5,status:'待处理',owner:'孟祥月',hours:27,pct:1.4,logs:[{date:'2026-03-20',text:'孟祥月 创建任务',type:'p'}]},
+      {id:'4655973000',name:'资产实物中心运营迭代',team:'POM',kr:'POM平台型集团建设',imp:4,diff:4,prio:4,scope:4,status:'已完成',owner:'段练',hours:43,pct:2.1,logs:[{date:'2026-03-10',text:'段练 创建任务',type:'p'},{date:'2026-04-15',text:'段练 完成并验收',type:'s'}]},
+      {id:'4655971864',name:'设计师工作台-智绘中心',team:'ITD',kr:'工作台建设',imp:5,diff:5,prio:5,scope:5,status:'进行中',owner:'孟祥月',hours:170,pct:8.5,logs:[{date:'2026-03-18',text:'孟祥月 创建任务',type:'p'}]},
+      {id:'4655971990',name:'搭建文印管理系统',team:'运维',kr:'保障总部终端资源高可用',imp:4,diff:5,prio:3,scope:5,status:'已完成',owner:'刘琳',hours:91,pct:4.5,logs:[{date:'2026-03-22',text:'刘琳 创建任务',type:'p'},{date:'2026-04-20',text:'刘琳 完成验收',type:'s'}]},
+      {id:'4655972454',name:'AI建设',team:'POM',kr:'数字员工及智能体',imp:5,diff:5,prio:5,scope:5,status:'已完成',owner:'段练',hours:21,pct:1.1,logs:[{date:'2026-03-10',text:'段练 创建任务',type:'p'},{date:'2026-04-10',text:'段练 提前完成',type:'s'}]},
+      {id:'4655972976',name:'MS-0512-模型计算中心',team:'ITD',kr:'工作台建设',imp:5,diff:5,prio:5,scope:5,status:'进行中',owner:'孟祥月',hours:60,pct:3.0,logs:[{date:'2026-03-18',text:'孟祥月 创建任务',type:'p'}]},
+      {id:'4655972730',name:'海外战队级项目',team:'OTD',kr:'海外业务架构资产上线',imp:4,diff:4,prio:4,scope:4,status:'待处理',owner:'王扬',hours:107,pct:5.3,logs:[{date:'2026-03-14',text:'王扬 创建任务',type:'p'}]},
+      {id:'4655970875',name:'应用开发安全管控中心建设',team:'安全保密',kr:'推进全集团网络安全能力建设',imp:5,diff:4,prio:4,scope:4,status:'进行中',owner:'王晶宝',hours:59,pct:3.0,logs:[{date:'2026-03-16',text:'王晶宝 创建任务',type:'p'}]},
+      {id:'4655971066',name:'传统系统单体IT系统建设优化',team:'ITD',kr:'完成研发工具软件采购',imp:5,diff:5,prio:5,scope:5,status:'待处理',owner:'孟祥月',hours:106,pct:5.3,logs:[{date:'2026-03-18',text:'孟祥月 创建任务',type:'p'}]},
+      {id:'4655970152',name:'数据工作台-信息架构中心优化',team:'数据',kr:'统一企业架构平台基于数据运营',imp:3,diff:2,prio:5,scope:2,status:'进行中',owner:'蒋汉卿',hours:111,pct:5.5,logs:[{date:'2026-03-11',text:'蒋汉卿 创建任务',type:'p'}]},
+      {id:'4655971961',name:'HRM战队级任务（新）',team:'HCM',kr:'HCM产品链工作台建设与运营',imp:5,diff:4,prio:3,scope:4,status:'进行中',owner:'马智博',hours:174,pct:8.7,logs:[{date:'2026-03-17',text:'马智博 创建任务',type:'p'}]},
+      {id:'4655970713',name:'开展部门绩效管理',team:'规划',kr:'能力提升常态化平台化',imp:4,diff:2,prio:5,scope:2,status:'进行中',owner:'柳中乔',hours:116,pct:5.8,logs:[{date:'2026-03-13',text:'柳中乔 创建任务',type:'p'}]},
+      {id:'4655972423',name:'指标数据服务开发',team:'数据',kr:'网络安全重大事件零发生',imp:3,diff:4,prio:4,scope:3,status:'进行中',owner:'蒋汉卿',hours:200,pct:10.0,logs:[{date:'2026-03-11',text:'蒋汉卿 创建任务',type:'p'}]},
+      {id:'4655969493',name:'设计师工作台-开发者平台',team:'ITD',kr:'工作台建设',imp:5,diff:5,prio:5,scope:5,status:'进行中',owner:'孟祥月',hours:37,pct:1.9,logs:[{date:'2026-03-18',text:'孟祥月 创建任务',type:'p'}]},
+      {id:'4655970623',name:'能源管理作业平台',team:'OTD',kr:'OTD能环管理中心全部业务单元孪生',imp:3,diff:3,prio:3,scope:3,status:'进行中',owner:'王扬',hours:31,pct:1.6,logs:[{date:'2026-03-14',text:'王扬 创建任务',type:'p'}]},
+      {id:'4655973001',name:'费控中心运营迭代',team:'POM',kr:'POM平台型集团建设',imp:5,diff:5,prio:5,scope:5,status:'已完成',owner:'段练',hours:189,pct:9.4,logs:[{date:'2026-03-10',text:'段练 创建任务',type:'p'},{date:'2026-04-22',text:'段练 完成验收',type:'s'}]},
+      {id:'4655969432',name:'fc3.0-研发平台-后端架构',team:'基础平台',kr:'云原生平台技术能力锐化',imp:5,diff:5,prio:5,scope:5,status:'进行中',owner:'黄钰淇',hours:78,pct:3.9,logs:[{date:'2026-03-10',text:'黄钰淇 创建任务',type:'p'}]},
+      {id:'4655972544',name:'ITD产品链-技术战略规划',team:'ITD',kr:'工作台建设',imp:5,diff:5,prio:5,scope:5,status:'已完成',owner:'孟祥月',hours:94,pct:4.7,logs:[{date:'2026-03-18',text:'孟祥月 创建任务',type:'p'},{date:'2026-04-18',text:'孟祥月 完成验收',type:'s'}]},
+      {id:'4655972463',name:'成本核算中心运营迭代',team:'POM',kr:'POM平台型集团建设',imp:5,diff:5,prio:5,scope:5,status:'进行中',owner:'段练',hours:40,pct:2.0,logs:[{date:'2026-03-10',text:'段练 创建任务',type:'p'}]},
+      {id:'4655970809',name:'推进云原生领域上云换轨',team:'基础平台',kr:'云原生平台技术能力锐化',imp:5,diff:5,prio:5,scope:5,status:'待处理',owner:'黄钰淇',hours:79,pct:4.0,logs:[{date:'2026-03-10',text:'黄钰淇 创建任务',type:'p'}]},
+      {id:'4655969845',name:'fc3.0-研发平台-低代码平台',team:'基础平台',kr:'云原生平台技术能力锐化',imp:3,diff:4,prio:2,scope:5,status:'已完成',owner:'黄钰淇',hours:45,pct:2.2,logs:[{date:'2026-03-10',text:'黄钰淇 创建任务',type:'p'},{date:'2026-04-05',text:'黄钰淇 完成验收',type:'s'}]},
+      {id:'4655970892',name:'工控领域安全管控',team:'安全保密',kr:'防范和化解网络安全重大风险',imp:5,diff:4,prio:3,scope:4,status:'进行中',owner:'王晶宝',hours:117,pct:5.8,logs:[{date:'2026-03-16',text:'王晶宝 创建任务',type:'p'}]},
+      {id:'4655970782',name:'推动总部及分子公司应用系统信创迁移',team:'基础平台',kr:'集团公司自主可控能力提升',imp:5,diff:5,prio:5,scope:5,status:'进行中',owner:'黄钰淇',hours:113,pct:5.7,logs:[{date:'2026-03-10',text:'黄钰淇 创建任务',type:'p'}]},
+      {id:'4655971129',name:'协同设计3DE',team:'ITD',kr:'加快推进传统应用系统优化升级',imp:5,diff:5,prio:5,scope:5,status:'进行中',owner:'孟祥月',hours:61,pct:3.0,logs:[{date:'2026-03-18',text:'孟祥月 创建任务',type:'p'}]},
+      {id:'4655970232',name:'生产计划能力中心',team:'OTD',kr:'OTD生产计划与运控中心全部业务单元孪生',imp:5,diff:5,prio:5,scope:5,status:'待处理',owner:'王扬',hours:114,pct:5.7,logs:[{date:'2026-03-14',text:'王扬 创建任务',type:'p'}]},
+      {id:'4655970979',name:'产品领域-PSC节点评价能力中心',team:'IPD',kr:'IPD产品链网络安全重大事件零发生',imp:4,diff:5,prio:4,scope:4,status:'进行中',owner:'王扬',hours:110,pct:5.5,logs:[{date:'2026-03-11',text:'王扬 创建任务',type:'p'}]},
+      {id:'4655971973',name:'打造一汽AI+能力中心',team:'AI',kr:'1+7+X智能体体系建设',imp:3,diff:5,prio:5,scope:5,status:'进行中',owner:'武沛多',hours:85,pct:4.2,logs:[{date:'2026-03-10',text:'武沛多 创建任务',type:'p'}]},
+      {id:'4655972990',name:'AI大模型建设与企业运营智能体构建',team:'AI',kr:'OpenMind建设',imp:5,diff:5,prio:5,scope:5,status:'进行中',owner:'武沛多',hours:196,pct:9.8,logs:[{date:'2026-03-10',text:'武沛多 创建任务',type:'p'}]},
+      {id:'4655972116',name:'培训赋能作业平台（新）',team:'HCM',kr:'HCM产品链智能体建设',imp:5,diff:4,prio:3,scope:4,status:'进行中',owner:'马智博',hours:88,pct:4.4,logs:[{date:'2026-03-17',text:'马智博 创建任务',type:'p'}]},
+      {id:'4655971909',name:'招募配置作业平台（新）',team:'HCM',kr:'HCM产品链工作台建设与运营',imp:5,diff:4,prio:3,scope:4,status:'进行中',owner:'马智博',hours:62,pct:3.1,logs:[{date:'2026-03-17',text:'马智博 创建任务',type:'p'}]},
+      {id:'4655972982',name:'MS-0512-模板中心',team:'ITD',kr:'工作台建设',imp:5,diff:3,prio:5,scope:5,status:'待处理',owner:'孟祥月',hours:134,pct:6.7,logs:[{date:'2026-03-18',text:'孟祥月 创建任务',type:'p'}]},
+      {id:'4655970131',name:'CSP-销售管理中心',team:'COM',kr:'信创工程',imp:3,diff:3,prio:3,scope:3,status:'进行中',owner:'徐海强',hours:38,pct:1.9,logs:[{date:'2026-03-15',text:'徐海强 创建任务',type:'p'}]},
+      {id:'4655970142',name:'CSP-售后运营中心',team:'COM',kr:'红旗运营',imp:3,diff:4,prio:3,scope:4,status:'进行中',owner:'徐海强',hours:55,pct:2.8,logs:[{date:'2026-03-15',text:'徐海强 创建任务',type:'p'}]},
+      {id:'4655972856',name:'MS-0512-关心关爱中心tuc',team:'ITD',kr:'工作台建设',imp:5,diff:5,prio:5,scope:5,status:'进行中',owner:'孟祥月',hours:128,pct:6.4,logs:[{date:'2026-03-18',text:'孟祥月 创建任务',type:'p'}]},
+      {id:'4655971863',name:'设计师工作台-Cloud Bom中心',team:'IPD',kr:'IPD产品链新增7个智能体',imp:5,diff:5,prio:4,scope:4,status:'待处理',owner:'王扬',hours:75,pct:3.8,logs:[{date:'2026-03-11',text:'王扬 创建任务',type:'p'}]},
+      {id:'4655972338',name:'MS-0512-思想引领中心',team:'ITD',kr:'工作台建设',imp:5,diff:5,prio:5,scope:5,status:'待处理',owner:'孟祥月',hours:136,pct:6.8,logs:[{date:'2026-03-18',text:'孟祥月 创建任务',type:'p'}]},
+      {id:'4655969453',name:'设计师工作台-标准中心',team:'ITD',kr:'工作台建设',imp:5,diff:5,prio:5,scope:5,status:'进行中',owner:'孟祥月',hours:91,pct:4.5,logs:[{date:'2026-03-18',text:'孟祥月 创建任务',type:'p'}]},
+      {id:'4655969456',name:'设计师工作台-项目中心',team:'ITD',kr:'工作台建设',imp:5,diff:5,prio:5,scope:5,status:'已完成',owner:'孟祥月',hours:182,pct:9.1,logs:[{date:'2026-03-18',text:'孟祥月 创建任务',type:'p'},{date:'2026-04-25',text:'孟祥月 完成验收',type:'s'}]},
+      {id:'4655972565',name:'MS-0512-关心关爱中心ccc',team:'ITD',kr:'工作台建设',imp:5,diff:5,prio:5,scope:5,status:'进行中',owner:'孟祥月',hours:91,pct:4.5,logs:[{date:'2026-03-18',text:'孟祥月 创建任务',type:'p'}]},
+    ].map(t => Object.assign({}, t, {score: t.imp*3 + t.diff*3 + t.prio*2 + t.scope*1})));
+
+    // helpers
+    const scoreClass = (s) => {
+      if (s >= 40) return 'sc sc-h';
+      if (s >= 28) return 'sc sc-m';
+      return 'sc sc-l';
+    };
+    const stClass = (s) => {
+      if (s === '进行中') return 'tag t-a';
+      if (s === '已完成') return 'tag t-g';
+      return 'tag t-n';
+    };
+    const ocMap = {黄钰淇:'#3A2AE4',段练:'#00B42A',王扬:'#FF7D00',蒋汉卿:'#9747FF',柳中乔:'#0099CC',孟祥月:'#E12535',徐海强:'#854D0E',王晶宝:'#0E7490',刘琳:'#166534',马智博:'#7B61FF',武沛多:'#6B21A8'};
+    const oc = (name) => ocMap[name] || '#7B61FF';
+
+    const teamTotalHours = computed(() => {
+      const m = {};
+      allTasks.value.forEach(t => { m[t.team] = (m[t.team] || 0) + t.hours; });
+      return m;
+    });
+    const tpct = (task) => {
+      const total = teamTotalHours.value[task.team] || 1;
+      return Math.round(task.hours / total * 1000) / 10;
+    };
+    const tpStyle = (v) => ({fontWeight:600, color: v>25?'#E12535':v>15?'#FF7D00':'#00B42A'});
+    const pStyle  = (v) => ({fontWeight:600, color: v>8?'#E12535':v>5?'#FF7D00':'#00B42A'});
+    const sc = (status) => allTasks.value.filter(t => t.status === status).length;
+
+    // filter + sort
+    const viewMode     = ref('list');
+    const filterStatus = ref('');
+    const filterTeam   = ref('');
+    const searchText   = ref('');
+    const srtKey       = ref('score');
+    const srtAsc       = ref(false);
+    const curPg        = ref(1);
+    const pgSz         = 15;
+    const teamOpts     = computed(() => [...new Set(allTasks.value.map(t => t.team))].sort());
+    const krOpts       = ['全部业务单元孪生','智能决策化率达到70%','关键业务对象100%连通','全产品链智能体28个','上线数字员工20名','OpenMind建设','云原生平台技术能力锐化','集团公司自主可控能力提升','POM平台型集团建设','工作台建设','海外业务架构资产上线'];
+
+    const filtered = computed(() => {
+      let list = allTasks.value;
+      if (filterStatus.value) list = list.filter(t => t.status === filterStatus.value);
+      if (filterTeam.value)   list = list.filter(t => t.team === filterTeam.value);
+      if (searchText.value) {
+        const q = searchText.value.toLowerCase();
+        list = list.filter(t => t.name.toLowerCase().includes(q) || t.id.includes(q));
+      }
+      return [...list].sort((a, b) => {
+        const v = srtAsc.value ? 1 : -1;
+        if (srtKey.value === 'tpct') return (tpct(a) - tpct(b)) * v;
+        if (typeof a[srtKey.value] === 'number') return (a[srtKey.value] - b[srtKey.value]) * v;
+        return String(a[srtKey.value]).localeCompare(String(b[srtKey.value])) * v;
+      });
+    });
+
+    const totPg   = computed(() => Math.max(1, Math.ceil(filtered.value.length / pgSz)));
+    const pgNums  = computed(() => {
+      const t = totPg.value, c = curPg.value;
+      const s = Math.max(1, c-2), e = Math.min(t, c+2);
+      const r = [];
+      for (let i = s; i <= e; i++) r.push(i);
+      return r;
+    });
+    const pagedTasks = computed(() => {
+      const s = (curPg.value - 1) * pgSz;
+      return filtered.value.slice(s, s + pgSz);
+    });
+    const srtBy = (key) => {
+      if (srtKey.value === key) srtAsc.value = !srtAsc.value;
+      else { srtKey.value = key; srtAsc.value = false; }
+      curPg.value = 1;
+    };
+
+    // kanban
+    const kbCols = [
+      {status:'待处理', cssClass:'k-p', color:'#A0A0A8'},
+      {status:'进行中', cssClass:'k-d', color:'#FF7D00'},
+      {status:'已完成', cssClass:'k-c', color:'#00B42A'},
+    ];
+    const kbList   = (status) => filtered.value.filter(t => t.status === status);
+    const dragId   = ref('');
+    const dragOv   = ref('');
+    let _dragTask  = null;
+    const onDragStart = (task) => { _dragTask = task; dragId.value = task.id; };
+    const onDragEnd   = () => { dragId.value = ''; dragOv.value = ''; };
+    const onDrop = (status) => {
+      dragOv.value = '';
+      if (_dragTask && _dragTask.status !== status) {
+        const t = allTasks.value.find(x => x.id === _dragTask.id);
+        if (t) {
+          const old = t.status;
+          t.status = status;
+          t.logs.unshift({date: new Date().toLocaleString('zh-CN'), text: '华莹莹 将任务从「' + old + '」移至「' + status + '」', type:'g', reason:'看板拖拽操作'});
+          ElementPlus.ElMessage.success('任务已移至「' + status + '」');
+        }
+      }
+      _dragTask = null; dragId.value = '';
+    };
+
+    // drawer
+    const drVisible = ref(false);
+    const drTab     = ref('edit');
+    const mode      = ref('create');
+    const newForm   = () => ({id:'', name:'', kr:'', team:'HCM', owner:'', status:'待处理', hours:0, imp:3, diff:3, prio:3, scope:3, pct:0, logs:[]});
+    const form      = ref(newForm());
+    const hv        = ref({imp:0, diff:0, prio:0, scope:0});
+    const wtotal    = computed(() => form.value.imp*3 + form.value.diff*3 + form.value.prio*2 + form.value.scope*1);
+
+    const openDr = (task) => {
+      mode.value  = task ? 'edit' : 'create';
+      drTab.value = 'edit';
+      aiVisible.value = false;
+      form.value = task ? Object.assign({}, task) : newForm();
+      drVisible.value = true;
+    };
+
+    // AI
+    const aiVisible = ref(false);
+    const aiLoading = ref(false);
+    const aiR = ref({imp:4, diff:4, prio:4, scope:3, wt:37, reasons:{}});
+
+    const triggerAI = () => {
+      aiVisible.value = true;
+      aiLoading.value = true;
+      setTimeout(() => {
+        const name = form.value.name;
+        const kr   = form.value.kr;
+        let imp=3, diff=3, prio=3, scope=2;
+        let impR='', diffR='', prioR='', scopeR='';
+
+        if (kr && (kr.includes('部门') || kr.includes('全产品链') || kr.includes('全级次'))) {
+          imp=5; impR='关联部门级OKR，对部门战略成败具决定性影响，符合【战略关键-5分】。';
+        } else if (name.includes('智能体') || name.includes('AI') || name.includes('攻坚')) {
+          imp=4; impR='支撑团队级突破/维持领先型OKR，有重大战略价值，符合【战略重要-4分】。';
+        } else if (name.includes('迭代') || name.includes('优化') || name.includes('运营')) {
+          imp=3; impR='支撑团队内核心交付，属于稳健改进型OKR，符合【常规贡献-3分】。';
+        } else {
+          imp=3; impR='基于任务名称综合判断，属于团队内核心交付工作，符合【常规贡献-3分】。';
+        }
+
+        if (name.includes('AI大模型') || (name.includes('AI') && name.includes('建设'))) {
+          diff=5; diffR='行业级难题，无前车之鉴，需从0到1技术创新，符合【行业攻坚-5分】。';
+        } else if (name.includes('架构') || name.includes('平台') || name.includes('云原生')) {
+          diff=4; diffR='集团内无成功案例，需整合多领域知识应用前沿技术，符合【公司攻坚-4分】。';
+        } else if (name.includes('中心') || name.includes('模块') || name.includes('作业')) {
+          diff=3; diffR='需跨团队协调与技术攻关，有参考方案但需重大修改，符合【专业应用-3分】。';
+        } else if (name.includes('运维') || name.includes('整改')) {
+          diff=2; diffR='有明确SOP和工具模板，按部就班执行即可，符合【流程执行-2分】。';
+        } else {
+          diff=3; diffR='综合任务名称评估，有一定技术深度需跨团队协调，符合【专业应用-3分】。';
+        }
+
+        if (imp >= 5 && diff >= 4) {
+          prio=5; prioR='是当前战略目标的唯一关键路径，必须立即集中资源突破，符合【战略卡点-5分】。';
+        } else if (imp >= 4 || name.includes('集团')) {
+          prio=4; prioR='对OKR完成有重大影响，需调配优势资源确保按期完成，符合【高价值加速-4分】。';
+        } else if (kr && imp >= 3) {
+          prio=3; prioR='有明确上下游依赖，按既定计划投入标准资源准时交付，符合【计划内保障-3分】。';
+        } else {
+          prio=2; prioR='中长期价值工作，资源可在空档期灵活安排，符合【弹性安排-2分】。';
+        }
+
+        if (name.includes('集团') || name.includes('全级次') || name.includes('分子公司')) {
+          scope=4; scopeR='涉及集团内多个一级部门或多家分子公司协同推进，符合【集团级-4分】。';
+        } else if (name.includes('跨部门')) {
+          scope=3; scopeR='涉及2-3个一级部门的正式协同、评审或决策，符合【跨部门级-3分】。';
+        } else {
+          scope=2; scopeR='主要在部门内跨团队协作完成，未涉及跨部门正式协同，符合【跨团队级-2分】。';
+        }
+
+        aiR.value = {
+          imp: imp, diff: diff, prio: prio, scope: scope,
+          wt: imp*3 + diff*3 + prio*2 + scope*1,
+          reasons: {imp:impR, diff:diffR, prio:prioR, scope:scopeR}
+        };
+        aiLoading.value = false;
+      }, 1800);
+    };
+
+    const adoptAI = () => {
+      form.value.imp   = aiR.value.imp;
+      form.value.diff  = aiR.value.diff;
+      form.value.prio  = aiR.value.prio;
+      form.value.scope = aiR.value.scope;
+      aiVisible.value  = false;
+      ElementPlus.ElMessage.success('已采纳 AI 评分');
+    };
+
+    // save
+    const saveMo = ref(false);
+    const chg    = ref({reason:'', desc:''});
+    const handleSave = () => {
+      if (mode.value === 'edit') { chg.value = {reason:'', desc:''}; saveMo.value = true; }
+      else { drVisible.value = false; ElementPlus.ElMessage.success('任务创建成功'); }
+    };
+    const confirmSave = () => {
+      if (!chg.value.reason || !chg.value.desc) return;
+      const t = allTasks.value.find(x => x.id === form.value.id);
+      if (t) {
+        t.status = form.value.status;
+        t.hours  = form.value.hours;
+        t.imp = form.value.imp; t.diff = form.value.diff;
+        t.prio = form.value.prio; t.scope = form.value.scope;
+        t.score = form.value.imp*3 + form.value.diff*3 + form.value.prio*2 + form.value.scope*1;
+        t.logs.unshift({date: new Date().toLocaleString('zh-CN'), text:'华莹莹 修改了任务信息', type:'p', reason: chg.value.reason + ' - ' + chg.value.desc});
+      }
+      saveMo.value = false; drVisible.value = false;
+      ElementPlus.ElMessage.success('保存成功，变更已归档');
+    };
+
+    return {
+      activeNav, navItems, goNav,
+      allTasks, viewMode, filterStatus, filterTeam, searchText,
+      srtKey, srtAsc, srtBy, curPg, totPg, pgNums, pagedTasks, filtered,
+      teamOpts, krOpts, sc, scoreClass, stClass, oc, tpct, tpStyle, pStyle,
+      kbCols, kbList, dragId, dragOv, onDragStart, onDragEnd, onDrop,
+      drVisible, drTab, mode, form, hv, dims, wtotal, openDr,
+      aiVisible, aiLoading, aiR, triggerAI, adoptAI,
+      saveMo, chg, handleSave, confirmSave,
+    };
+  }
+}).use(ElementPlus).mount('#app');
+</script>
+</body>
+</html>

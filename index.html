@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OKR 管理平台 · 战略仪表盘</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,500;9..40,700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/element-plus@2/dist/index.full.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2/dist/index.css">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+:root{--primary:#3A2AE4;--primary-light:#ECF1FF;--success:#00B42A;--success-bg:#E8FFEA;--warning:#FF7D00;--warning-bg:#FFF7E8;--error:#E12535;--error-bg:#FFECE8;--text-main:#262629;--text-secondary:#666672;--text-disable:#A0A0A8;--border:#E5E6EB;--bg:#F6F6F8;--card:#FFFFFF;--sidebar-w:220px;--topbar-h:56px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans SC','DM Sans',sans-serif;background:var(--bg);color:var(--text-main);font-size:14px;min-height:100vh}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#D0D0D8;border-radius:2px}
+.app-shell{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:var(--sidebar-w);background:#fff;border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.sidebar-brand{height:var(--topbar-h);padding:0 20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.brand-logo{width:32px;height:32px;background:linear-gradient(135deg,var(--primary) 0%,#6B5DF0 100%);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;letter-spacing:-0.5px}
+.brand-text{line-height:1.25}.brand-name{font-size:13px;font-weight:600;color:var(--text-main)}.brand-sub{font-size:11px;color:var(--text-secondary)}
+.sidebar-user{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#ECF1FF,#C5C0F8);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--primary);flex-shrink:0}
+.user-info{line-height:1.3}.user-name{font-size:13px;font-weight:500}.user-cycle{font-size:11px;color:var(--text-secondary)}
+.sidebar-nav{flex:1;padding:12px 0;overflow-y:auto}
+.nav-item{height:40px;padding:0 20px;display:flex;align-items:center;gap:10px;cursor:pointer;color:var(--text-secondary);font-size:13px;transition:all .15s;border-right:2px solid transparent}
+.nav-item:hover{background:var(--primary-light);color:var(--primary)}
+.nav-item.active{background:var(--primary-light);color:var(--primary);font-weight:500;border-right-color:var(--primary)}
+.nav-badge{margin-left:auto;background:var(--error);color:#fff;font-size:10px;font-weight:600;padding:1px 5px;border-radius:8px;min-width:18px;text-align:center}
+.main-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{height:var(--topbar-h);background:#fff;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;gap:16px;flex-shrink:0}
+.topbar-title{font-size:15px;font-weight:600;color:var(--text-main)}
+.topbar-search{flex:1;max-width:360px;margin:0 auto;position:relative}
+.topbar-search input{width:100%;height:32px;border:1px solid var(--border);border-radius:6px;padding:0 12px 0 32px;font-size:13px;font-family:inherit;color:var(--text-main);background:var(--bg);transition:border-color .15s,box-shadow .15s;outline:none}
+.topbar-search input:focus{border-color:var(--primary);box-shadow:0 0 0 2px rgba(58,42,228,.08);background:#fff}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-disable);font-size:13px;pointer-events:none}
+.topbar-right{display:flex;align-items:center;gap:8px;margin-left:auto}
+.cycle-btn{height:32px;padding:0 12px;border-radius:6px;border:1px solid var(--border);background:#fff;font-size:13px;cursor:pointer;color:var(--text-main);display:flex;align-items:center;gap:4px;transition:border-color .15s}
+.cycle-btn.active{border-color:var(--primary);color:var(--primary);background:var(--primary-light);font-weight:500}
+.cycle-btn:hover{border-color:var(--primary)}
+.content{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:16px}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.section-title{font-size:13px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px}
+.section-action{font-size:12px;color:var(--primary);cursor:pointer}
+.metric-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:12px}
+@media(max-width:1400px){.metric-grid{grid-template-columns:repeat(4,1fr)}}
+.metric-card{background:var(--card);border-radius:8px;padding:16px;cursor:pointer;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.04);transition:box-shadow .2s,transform .15s,border-color .15s;position:relative;overflow:hidden}
+.metric-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:opacity .2s}
+.metric-card:hover{box-shadow:0 4px 16px rgba(58,42,228,.1);transform:translateY(-1px);border-color:rgba(58,42,228,.2)}
+.metric-card:hover::before{opacity:1;background:var(--primary)}
+.metric-card.drillable:hover{cursor:pointer}
+.mc-label{font-size:11px;color:var(--text-secondary);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc-value{font-size:24px;font-weight:700;color:var(--text-main);line-height:1;margin-bottom:6px}
+.mc-sub{font-size:11px;color:var(--text-disable)}
+.mc-drill-hint{font-size:10px;color:var(--primary);margin-top:5px;opacity:0;transition:opacity .15s}
+.metric-card:hover .mc-drill-hint{opacity:1}
+.mc-grad-blue{background:linear-gradient(135deg,#ECF1FF 0%,#FFFFFF 100%)}
+.mc-grad-cyan{background:linear-gradient(135deg,#ECFAFF 0%,#FFFFFF 100%)}
+.mc-grad-green{background:linear-gradient(135deg,#F0FFF6 0%,#FFFFFF 100%)}
+.mc-grad-amber{background:linear-gradient(135deg,#FFFBEC 0%,#FFFFFF 100%)}
+.triple-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:1100px){.triple-grid{grid-template-columns:1fr}}
+.panel-card{background:var(--card);border-radius:8px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.04);display:flex;flex-direction:column;overflow:hidden}
+.panel-header{padding:14px 16px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.panel-title{font-size:13px;font-weight:600;color:var(--text-main);display:flex;align-items:center;gap:6px}
+.panel-more{font-size:12px;color:var(--primary);cursor:pointer}
+.panel-body{flex:1;overflow-y:auto;padding:0}
+.team-list-item{padding:10px 16px;display:grid;grid-template-columns:1fr 60px auto auto;align-items:center;gap:12px;border-bottom:1px solid #F5F5F8;cursor:pointer;transition:background .12s}
+.team-list-item:hover{background:#F5F7FA}
+.team-list-item:last-child{border-bottom:none}
+.tl-name{font-size:13px;font-weight:500;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-kr{font-size:11px;color:var(--text-secondary)}
+.progress-track{height:4px;background:#EEEEF2;border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;border-radius:2px;transition:width .4s}
+.s-tag{height:20px;padding:0 7px;border-radius:4px;font-size:11px;font-weight:500;white-space:nowrap;display:inline-flex;align-items:center;cursor:default}
+.s-tag-green{background:var(--success-bg);color:var(--success)}
+.s-tag-yellow{background:var(--warning-bg);color:var(--warning)}
+.s-tag-red{background:var(--error-bg);color:var(--error)}
+.s-tag-blue{background:var(--primary-light);color:var(--primary)}
+.s-tag-gray{background:#F2F3F5;color:var(--text-secondary)}
+.score-bar-item{padding:9px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #F5F5F8;cursor:pointer;transition:background .12s}
+.score-bar-item:hover{background:#F5F7FA}
+.score-bar-item:last-child{border-bottom:none}
+.sb-rank{width:18px;font-size:11px;font-weight:700;color:var(--text-disable);flex-shrink:0;text-align:right}
+.sb-rank.top{color:var(--primary)}
+.sb-name{font-size:13px;color:var(--text-main);width:80px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-bar-wrap{flex:1}
+.sb-bar-track{height:8px;background:#EEEEF2;border-radius:4px;overflow:hidden}
+.sb-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#3A2AE4 0%,#6B5DF0 100%)}
+.sb-score{font-size:13px;font-weight:600;color:var(--text-main);width:36px;text-align:right;flex-shrink:0}
+.emp-list-item{padding:9px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #F5F5F8;cursor:pointer;transition:background .12s}
+.emp-list-item:hover{background:#F5F7FA}
+.emp-list-item:last-child{border-bottom:none}
+.emp-avatar{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff}
+.emp-name{font-size:13px;font-weight:500;color:var(--text-main);flex:1}
+.emp-kr{font-size:12px;color:var(--text-secondary)}
+.emp-kr span{color:var(--primary);font-weight:600}
+.warn-item{padding:10px 16px;border-bottom:1px solid #F5F5F8;display:flex;align-items:flex-start;gap:8px}
+.warn-item:last-child{border-bottom:none}
+.warn-icon{font-size:13px;flex-shrink:0;margin-top:1px}
+.warn-body{flex:1}
+.warn-kr{font-size:13px;font-weight:500;color:var(--error);margin-bottom:3px;line-height:1.4}
+.warn-reason{font-size:11px;color:var(--text-secondary);line-height:1.5}
+.warn-tag{display:inline-block;margin-top:4px}
+.res-item{padding:10px 16px;border-bottom:1px solid #F5F5F8;cursor:pointer;transition:background .12s}
+.res-item:hover{background:#F5F7FA}
+.res-item:last-child{border-bottom:none}
+.res-header{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.res-name{font-size:13px;font-weight:500;color:var(--text-main);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.res-bars{display:flex;align-items:center;gap:8px}
+.res-bar-label{font-size:11px;color:var(--text-secondary);width:56px;flex-shrink:0}
+.res-bar-wrap{flex:1;display:flex;align-items:center;gap:6px}
+.res-bar-track{flex:1;height:6px;background:#EEEEF2;border-radius:3px;overflow:hidden}
+.res-bar-plan{height:100%;border-radius:3px;background:#BDC3F0}
+.res-bar-actual{height:100%;border-radius:3px;background:var(--error)}
+.res-bar-pct{font-size:11px;font-weight:600;width:32px;text-align:right;flex-shrink:0}
+.spark-item{padding:9px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #F5F5F8}
+.spark-item:last-child{border-bottom:none}
+.spark-name{font-size:13px;color:var(--text-main);width:72px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.spark-chart{flex:1}
+.spark-val{font-size:13px;font-weight:600;width:36px;text-align:right;flex-shrink:0}
+.pop-inner{min-width:220px;max-width:290px}
+.pop-title{font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.pop-row{display:flex;align-items:flex-start;gap:6px;padding:4px 0;border-bottom:1px solid #F5F5F8}
+.pop-row:last-child{border-bottom:none}
+.pop-dot{width:6px;height:6px;border-radius:50%;background:var(--primary);margin-top:5px;flex-shrink:0}
+.pop-text{font-size:12px;color:var(--text-main);line-height:1.5;flex:1}
+.pop-sub{font-size:11px;color:var(--text-secondary)}
+.pop-footer{margin-top:8px;padding-top:6px;border-top:1px solid var(--border);font-size:11px;color:var(--text-disable)}
+.map-row{display:flex;align-items:center;gap:6px;padding:3px 0}
+.map-text{font-size:12px;line-height:1.4}
+.map-text.unlinked{color:#999}
+.map-text.linked{color:var(--text-main)}
+.ai-badge{display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,#ECF1FF,#E8E5FF);border:1px solid #C5C0F8;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;color:var(--primary)}
+.panel-footer{padding:10px 16px;border-top:1px solid var(--border);text-align:center}
+.panel-footer a{font-size:12px;color:var(--primary);cursor:pointer}
+.el-popover{font-family:'Noto Sans SC',sans-serif!important}
+.el-popover.el-popper{padding:12px!important}
+.el-popper{z-index:9999!important}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="app-shell">
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-logo">OKR</div>
+        <div class="brand-text">
+          <div class="brand-name">OKR 管理平台</div>
+          <div class="brand-sub">中国一汽</div>
+        </div>
+      </div>
+      <div class="sidebar-user">
+        <div class="user-avatar">华</div>
+        <div class="user-info">
+          <div class="user-name">华莹莹</div>
+          <div class="user-cycle">2026 全年</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div v-for="nav in navItems" :key="nav.key"
+             :class="['nav-item', nav.key===activeNav ? 'active' : '']"
+             @click="goNav(nav)">
+          <span>{{ nav.icon }}</span>
+          <span>{{ nav.label }}</span>
+          <span v-if="nav.badge" class="nav-badge">{{ nav.badge }}</span>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- ── Main ── -->
+    <div class="main-wrap">
+      <header class="topbar">
+        <span class="topbar-title">战略仪表盘</span>
+        <div class="topbar-search">
+          <span class="search-icon">🔍</span>
+          <input placeholder="搜索目标、KR、员工..." />
+        </div>
+        <div class="topbar-right">
+          <button :class="['cycle-btn', activeCycle==='2025'?'active':'']" @click="activeCycle='2025'">2025</button>
+          <button :class="['cycle-btn', activeCycle==='2026'?'active':'']" @click="activeCycle='2026'">2026</button>
+        </div>
+      </header>
+
+      <main class="content">
+
+        <!-- ── Section 1: Metric Cards ── -->
+        <div>
+          <div class="section-header">
+            <span class="section-title">核心指标总览</span>
+            <span class="section-action">实时刷新 ↻</span>
+          </div>
+          <div class="metric-grid">
+            <el-popover v-for="mc in metricCards" :key="mc.key"
+              placement="bottom" :width="270" trigger="hover">
+              <template #reference>
+                <div :class="['metric-card', mc.grad, mc.drillTo ? 'drillable' : '']"
+                     @click="onMetricCardClick(mc)">
+                  <div class="mc-label">{{ mc.label }}</div>
+                  <div class="mc-value">{{ mc.value }}</div>
+                  <div class="mc-sub">{{ mc.sub }}</div>
+                  <div v-if="mc.drillTo" class="mc-drill-hint">点击查看详情 →</div>
+                </div>
+              </template>
+              <template #default>
+                <div class="pop-inner">
+                  <div class="pop-title">{{ mc.popTitle }}</div>
+                  <template v-if="mc.type==='map'">
+                    <div v-for="(r,i) in mc.popRows" :key="i" class="map-row">
+                      <div :style="{width:'5px',height:'5px',borderRadius:'50%',background:r.linked?'#00B42A':'#CCC',flexShrink:0}"></div>
+                      <div :class="['map-text', r.linked?'linked':'unlinked']">{{ r.name }}</div>
+                      <span v-if="!r.linked" style="font-size:10px;color:#999;margin-left:auto">未承接</span>
+                    </div>
+                    <div class="pop-footer">{{ mc.popFooter }}</div>
+                  </template>
+                  <template v-else>
+                    <div v-for="(r,i) in mc.popRows" :key="i" class="pop-row">
+                      <div class="pop-dot"></div>
+                      <div>
+                        <div class="pop-text">{{ r.name }}</div>
+                        <div class="pop-sub">{{ r.sub }}</div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </template>
+            </el-popover>
+          </div>
+        </div>
+
+        <!-- ── Section 2: Middle Triple ── -->
+        <div>
+          <div class="section-header" style="margin-bottom:12px">
+            <span class="section-title">运营健康度</span>
+          </div>
+          <div class="triple-grid">
+
+            <!-- Col 1: Team OKR Overview -->
+            <div class="panel-card">
+              <div class="panel-header">
+                <div class="panel-title">📊 各团队 OKR 概览</div>
+                <span class="panel-more" @click="goTo('team_okr.html')">查看更多</span>
+              </div>
+              <div class="panel-body">
+                <el-popover v-for="team in teamOkrList" :key="team.name"
+                  placement="right" :width="290" trigger="hover">
+                  <template #reference>
+                    <div class="team-list-item" @click="goTeamOkr(team)">
+                      <div>
+                        <div class="tl-name">{{ team.name }}</div>
+                        <div class="tl-kr">{{ team.krCount }} 个KR · {{ team.leader }}</div>
+                      </div>
+                      <div>
+                        <div style="font-size:11px;color:var(--text-secondary);margin-bottom:3px;">{{ team.confidence }}%</div>
+                        <div class="progress-track">
+                          <div class="progress-fill"
+                            :style="{width:team.confidence+'%',background:team.confidence>=90?'#00B42A':team.confidence>=80?'#FF7D00':'#E12535'}"></div>
+                        </div>
+                      </div>
+                      <el-popover placement="left" :width="250" trigger="hover">
+                        <template #reference>
+                          <span :class="['s-tag', teamStatusClass(team.status)]">{{ team.statusLabel }}</span>
+                        </template>
+                        <template #default>
+                          <div class="pop-inner">
+                            <div class="pop-title">🚦 亮灯模型规则</div>
+                            <div style="font-size:12px;line-height:1.8;color:var(--text-main)">
+                              <div>🟢 <b>正常</b>：全部KR信心 ≥90%，且无逾期任务</div>
+                              <div>🟡 <b>滞后</b>：存在KR信心在70%~90%，或逾期任务 &gt;15%</div>
+                              <div>🔴 <b>风险</b>：存在KR信心 &lt;70%，或逾期任务 &gt;25%</div>
+                            </div>
+                          </div>
+                        </template>
+                      </el-popover>
+                    </div>
+                  </template>
+                  <template #default>
+                    <div class="pop-inner">
+                      <div class="pop-title">{{ team.name }} · KR 样本</div>
+                      <div v-for="kr in team.krs" :key="kr.name" class="pop-row">
+                        <div class="pop-dot"></div>
+                        <div>
+                          <div class="pop-text">{{ kr.name }}</div>
+                          <div class="pop-sub">信心 {{ kr.conf }}% · {{ kr.owner }}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                </el-popover>
+              </div>
+            </div>
+
+            <!-- Col 2: Score Ranking -->
+            <div class="panel-card">
+              <div class="panel-header">
+                <div class="panel-title">🏆 团队 KR 信心均值排名</div>
+                <span class="panel-more" @click="goTo('team_okr.html')">查看更多</span>
+              </div>
+              <div class="panel-body">
+                <div v-for="(item,idx) in scoreRankList" :key="item.name"
+                     class="score-bar-item" @click="goTeamOkrByName(item.name)">
+                  <div :class="['sb-rank', idx<3?'top':'']">{{ idx+1 }}</div>
+                  <div class="sb-name">{{ item.name }}</div>
+                  <div class="sb-bar-wrap">
+                    <div class="sb-bar-track">
+                      <div class="sb-bar-fill" :style="{width:item.score+'%'}"></div>
+                    </div>
+                  </div>
+                  <div class="sb-score">{{ item.score }}%</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Col 3: Employee OKR -->
+            <div class="panel-card">
+              <div class="panel-header">
+                <div class="panel-title">👥 KR 负责人承接 TOP10</div>
+                <span class="panel-more" @click="goTo('personal_okr.html')">查看更多</span>
+              </div>
+              <div class="panel-body">
+                <el-popover v-for="emp in employeeList" :key="emp.name"
+                  placement="left" :width="260" trigger="hover">
+                  <template #reference>
+                    <div class="emp-list-item" @click="goTo('personal_okr.html?empId='+encodeURIComponent(emp.name))">
+                      <div class="emp-avatar" :style="{background:emp.color}">{{ emp.name[0] }}</div>
+                      <div class="emp-name">{{ emp.name }}</div>
+                      <div class="emp-kr">承接 <span>{{ emp.krCount }}</span> 个KR</div>
+                    </div>
+                  </template>
+                  <template #default>
+                    <div class="pop-inner">
+                      <div class="pop-title">{{ emp.name }} · 承接 KR</div>
+                      <div v-for="kr in emp.krs" :key="kr" class="pop-row">
+                        <div class="pop-dot"></div>
+                        <div class="pop-text">{{ kr }}</div>
+                      </div>
+                    </div>
+                  </template>
+                </el-popover>
+              </div>
+              <div class="panel-footer">
+                <a @click="goTo('personal_okr.html')">查看全部员工 OKR →</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Section 3: Bottom Triple ── -->
+        <div>
+          <div class="section-header" style="margin-bottom:12px">
+            <span class="section-title">风险预警中心</span>
+            <div class="ai-badge">✨ AI 驱动</div>
+          </div>
+          <div class="triple-grid">
+
+            <!-- Col 1: AI Warnings -->
+            <div class="panel-card">
+              <div class="panel-header">
+                <div class="panel-title">🔴 AI 风险预警</div>
+                <span class="ai-badge">智能诊断</span>
+              </div>
+              <div class="panel-body">
+                <div v-for="warn in aiWarnings" :key="warn.kr" class="warn-item">
+                  <span class="warn-icon">⚠️</span>
+                  <div class="warn-body">
+                    <div class="warn-kr">{{ warn.kr }}</div>
+                    <div class="warn-reason">{{ warn.reason }}</div>
+                    <div class="warn-tag">
+                      <span :class="['s-tag', warn.level==='红'?'s-tag-red':'s-tag-yellow']">{{ warn.level }}色预警</span>
+                      <span style="margin-left:6px;font-size:11px;color:var(--text-secondary)">{{ warn.team }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Col 2: Resource Mismatch -->
+            <div class="panel-card">
+              <div class="panel-header">
+                <div class="panel-title">📉 资源错配预警 TOP5</div>
+              </div>
+              <div class="panel-body">
+                <el-popover v-for="res in resourceWarnings" :key="res.kr"
+                  placement="left" :width="270" trigger="hover">
+                  <template #reference>
+                    <div class="res-item">
+                      <div class="res-header">
+                        <div class="res-name">{{ res.kr }}</div>
+                        <span :class="['s-tag', res.level==='红'?'s-tag-red':'s-tag-yellow']">{{ res.level }}色</span>
+                      </div>
+                      <div class="res-bars">
+                        <div class="res-bar-label">计划投入</div>
+                        <div class="res-bar-wrap">
+                          <div class="res-bar-track"><div class="res-bar-plan" :style="{width:res.plan+'%'}"></div></div>
+                        </div>
+                        <div class="res-bar-pct" style="color:#BDC3F0">{{ res.plan }}%</div>
+                      </div>
+                      <div class="res-bars" style="margin-top:4px">
+                        <div class="res-bar-label">实际消耗</div>
+                        <div class="res-bar-wrap">
+                          <div class="res-bar-track"><div class="res-bar-actual" :style="{width:res.actual+'%'}"></div></div>
+                        </div>
+                        <div class="res-bar-pct" :style="{color:res.level==='红'?'var(--error)':'var(--warning)'}">{{ res.actual }}%</div>
+                      </div>
+                    </div>
+                  </template>
+                  <template #default>
+                    <div class="pop-inner">
+                      <div class="pop-title">资源错配计算逻辑</div>
+                      <div style="font-size:12px;line-height:1.8;color:var(--text-main)">
+                        <div>📌 计划投入占比 = 该KR资源权重</div>
+                        <div>📌 实际投入占比 = 累计工时 / 团队总工时</div>
+                        <div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">
+                          <span :style="{color:res.level==='红'?'var(--error)':'var(--warning)',fontWeight:600}">
+                            |{{res.actual}}% - {{res.plan}}%| = {{Math.abs(res.actual-res.plan)}}%
+                          </span>
+                          <div style="color:var(--text-secondary);font-size:11px;margin-top:2px">
+                            超过{{ res.level==='红'?'30%':'15%' }}阈值 → 触发{{ res.level }}色预警
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                </el-popover>
+              </div>
+            </div>
+
+            <!-- Col 3: Sparklines -->
+            <div class="panel-card">
+              <div class="panel-header">
+                <div class="panel-title">📈 信心指数趋势</div>
+                <span class="panel-more">近12周</span>
+              </div>
+              <div class="panel-body">
+                <div v-for="spark in sparkTeams" :key="spark.name" class="spark-item"
+                     @click="goTeamOkrByName(spark.name)" style="cursor:pointer">
+                  <div class="spark-name">{{ spark.name }}</div>
+                  <div class="spark-chart">
+                    <div :id="'spark-'+spark.key" style="height:32px;width:100%"></div>
+                  </div>
+                  <div class="spark-val"
+                    :style="{color:spark.current>=90?'#00B42A':spark.current>=80?'#FF7D00':'#E12535'}">
+                    {{ spark.current }}%
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+</div>
+
+<script>
+const { createApp, ref, onMounted, nextTick } = Vue;
+createApp({
+  setup() {
+    const activeNav = ref('dashboard');
+    const activeCycle = ref('2026');
+
+    // ── 导航菜单（含跳转路径）──────────────────────────────────────────────
+    const navItems = [
+      { key:'dashboard',  icon:'📊', label:'战略仪表盘', badge:null,  href:'dashboard.html'     },
+      { key:'strategy',   icon:'🎯', label:'部门战略',   badge:null,  href:'dept_strategy.html' },
+      { key:'dept-okr',   icon:'🏛️', label:'部门 OKR',  badge:null,  href:'dept_okr.html'      },
+      { key:'team-okr',   icon:'👥', label:'团队 OKR',  badge:218,   href:'team_okr.html'      },
+      { key:'tasks',      icon:'✅', label:'任务管理',   badge:798,   href:'task_center.html'   },
+      { key:'employees',  icon:'👤', label:'员工 OKR',  badge:null,  href:'personal_okr.html'  },
+    ];
+
+    // ── 全局导航跳转 ──────────────────────────────────────────────────────
+    const goNav = (item) => {
+      if (item.href) window.location.href = item.href;
+    };
+
+    // ── 通用跳转 ─────────────────────────────────────────────────────────
+    const goTo = (href) => { window.location.href = href; };
+
+    // ── 指标卡穿透跳转 ────────────────────────────────────────────────────
+    const onMetricCardClick = (mc) => {
+      if (mc.drillTo) window.location.href = mc.drillTo;
+    };
+
+    // ── 团队行跳转（带参数） ──────────────────────────────────────────────
+    const goTeamOkr = (team) => {
+      window.location.href = 'team_okr.html?team=' + encodeURIComponent(team.name);
+    };
+    const goTeamOkrByName = (name) => {
+      window.location.href = 'team_okr.html?team=' + encodeURIComponent(name);
+    };
+
+    // ── 真实数据 ──────────────────────────────────────────────────────────
+    const metricCards = [
+      {
+        key:'strat-src', label:'战略源数量', value:'36', sub:'年度15 · 数智化11 · 531战略10',
+        grad:'mc-grad-blue', popTitle:'战略源分布', type:'list', drillTo:'dept_strategy.html',
+        popRows:[
+          {name:'年度重点工作',sub:'共15条战略来源'},
+          {name:'数智化大会决策',sub:'共11条战略来源'},
+          {name:'531战略',sub:'共10条战略来源'},
+        ]
+      },
+      {
+        key:'dept-o', label:'部门 O 数量', value:'13', sub:'承接 12 个战略源',
+        grad:'mc-grad-cyan', popTitle:'部门O明细', type:'list', drillTo:'dept_okr.html',
+        popRows:[
+          {name:'建成企业运营智能体OpenMind',sub:'承接：年度重点工作/531战略/数智化大会'},
+          {name:'全级次穿透式经营管控体系',sub:'承接：年度重点工作/数智化大会决策'},
+          {name:'产品链工作台建设与运营',sub:'承接：年度重点工作/531战略/数智化大会'},
+          {name:'提升数智能力',sub:'承接：年度重点工作/531战略/数智化大会'},
+          {name:'云原生能力锐化',sub:'承接：531战略'},
+        ]
+      },
+      {
+        key:'dept-kr', label:'部门 KR 数量', value:'34', sub:'覆盖13个部门O',
+        grad:'mc-grad-green', popTitle:'部门KR明细（样本）', type:'list', drillTo:'dept_okr.html',
+        popRows:[
+          {name:'全产品链智能体28个',sub:'负责人：魏旭 · 归属：建成OpenMind'},
+          {name:'上线数字员工20名',sub:'负责人：娄睿琦 · 归属：建成OpenMind'},
+          {name:'OpenMind建设',sub:'负责人：武沛多 · 归属：建成OpenMind'},
+          {name:'网络安全重大事件零发生',sub:'负责人：王晶宝 · 归属：网络安全'},
+          {name:'总部及分子公司达成8199指标',sub:'负责人：陶建尧 · 归属：信创工程'},
+        ]
+      },
+      {
+        key:'team-o', label:'团队 O 数量', value:'89', sub:'覆盖14个团队',
+        grad:'mc-grad-amber', popTitle:'团队O样本', type:'list', drillTo:'team_okr.html',
+        popRows:[
+          {name:'HCM产品链工作台建设与运营',sub:'HCM团队 · 负责人：马智博'},
+          {name:'打造企业级智能体OpenMind',sub:'AI团队 · 负责人：武沛多'},
+          {name:'云原生平台技术能力锐化',sub:'基础平台 · 负责人：黄钰淇'},
+          {name:'POM平台型集团建设',sub:'POM团队 · 负责人：段练'},
+        ]
+      },
+      {
+        key:'team-kr', label:'团队 KR 数量', value:'218', sub:'覆盖14个团队',
+        grad:'mc-grad-blue', popTitle:'团队KR分布（按团队）', type:'list', drillTo:'team_okr.html',
+        popRows:[
+          {name:'OTD团队',sub:'31个KR · 负责人：王扬'},
+          {name:'POM团队',sub:'24个KR · 负责人：段练'},
+          {name:'COM团队',sub:'22个KR · 负责人：徐海强'},
+          {name:'IPD团队',sub:'21个KR · 负责人：王扬'},
+          {name:'AI团队',sub:'18个KR · 负责人：武沛多'},
+        ]
+      },
+      {
+        key:'tasks', label:'任务数量总计', value:'798', sub:'覆盖全部14个团队',
+        grad:'mc-grad-cyan', popTitle:'任务分布（样本）', type:'list', drillTo:'task_center.html',
+        popRows:[
+          {name:'HCM产品链相关任务',sub:'归属：HCM团队'},
+          {name:'智能体建设专项任务',sub:'归属：AI团队'},
+          {name:'云原生平台交付任务',sub:'归属：基础平台团队'},
+        ]
+      },
+      {
+        key:'strat-rate', label:'战略源落实率', value:'92%', sub:'33/36 已承接部门O',
+        grad:'mc-grad-green', popTitle:'战略源承接映射', type:'map', drillTo:'dept_strategy.html',
+        popRows:[
+          {name:'数智化升级 → 建成OpenMind',linked:true},
+          {name:'全级次穿透管控 → 穿透式经营管控',linked:true},
+          {name:'自主可控工程 → 信创工程',linked:true},
+          {name:'安全合规体系 → 网络安全',linked:true},
+          {name:'AI算力基础设施 → 算力集群建设',linked:true},
+          {name:'大司库平台化 → 产品链工作台',linked:true},
+          {name:'国家级汽车AI中试基地',linked:false},
+          {name:'高端车型销量战略',linked:false},
+          {name:'绿色制造专项',linked:false},
+        ],
+        popFooter:'计算公式：已承接战略源 / 战略源总数(36)'
+      },
+      {
+        key:'dept-o-rate', label:'部门O承接率', value:'100%', sub:'全部13个O已拆解KR',
+        grad:'mc-grad-amber', popTitle:'部门O → KR 承接映射', type:'map', drillTo:'dept_okr.html',
+        popRows:[
+          {name:'建成企业运营智能体OpenMind → 4个KR',linked:true},
+          {name:'全级次穿透式经营管控 → 3个KR',linked:true},
+          {name:'产品链工作台建设与运营 → 3个KR',linked:true},
+          {name:'提升数智能力 → 4个KR',linked:true},
+          {name:'云原生能力锐化 → 6个KR',linked:true},
+          {name:'网络安全 → 2个KR',linked:true},
+          {name:'人工智能算力集群建设 → 2个KR',linked:true},
+          {name:'涉密信息系统合规率100% → 1个KR',linked:true},
+        ],
+        popFooter:'计算公式：已拆解KR的部门O / 部门O总数(13)'
+      },
+    ];
+
+    // 团队OKR列表（真实数据）
+    const teamOkrList = [
+      {name:'POM',leader:'段练',krCount:24,confidence:95,status:'green',statusLabel:'正常',
+       krs:[{name:'大司库全级次100%应用',conf:100,owner:'孙海涛'},{name:'财务共享智能审核率73%',conf:90,owner:'孙海涛'},{name:'核心服务可用率99%',conf:100,owner:'王继权'}]},
+      {name:'数据',leader:'蒋汉卿',krCount:14,confidence:96,status:'green',statusLabel:'正常',
+       krs:[{name:'关键业务对象100%连通',conf:90,owner:'金鑫禹'},{name:'企业架构专业角色认证率100%',conf:100,owner:'于海洋'},{name:'拓展标杆客户2家',conf:100,owner:'穆斯琳'}]},
+      {name:'SEC',leader:'宋石',krCount:8,confidence:96,status:'green',statusLabel:'正常',
+       krs:[{name:'SEC产品链数字员工2个',conf:100,owner:'宋石'},{name:'SEC战略管控云产品全部上线',conf:100,owner:'宋石'},{name:'SEC产品链智能体4个',conf:100,owner:'宋石'}]},
+      {name:'HCM',leader:'马智博',krCount:10,confidence:90,status:'green',statusLabel:'正常',
+       krs:[{name:'基础人事中心全集团推广100%',conf:90,owner:'王峰'},{name:'HCM产品迭代',conf:95,owner:'韩文君'},{name:'5个智能体/3名数字员工',conf:95,owner:'董玉增'}]},
+      {name:'规划',leader:'柳中乔',krCount:17,confidence:86,status:'yellow',statusLabel:'滞后',
+       krs:[{name:'集团总部T/P能力焕新完成率100%',conf:100,owner:'梁爽'},{name:'分子公司T/P五人组配置率100%',conf:60,owner:'于季芝'},{name:'年内完成高级经理过关工作',conf:90,owner:'娄睿琦'}]},
+      {name:'AI',leader:'武沛多',krCount:18,confidence:85,status:'yellow',statusLabel:'滞后',
+       krs:[{name:'L1级行业大模型发布迭代',conf:75,owner:'李昂'},{name:'1+7+X智能体体系建设',conf:75,owner:'魏旭'},{name:'AIAP模块建成准确率≥80%',conf:86,owner:'徐智'}]},
+      {name:'基础平台',leader:'黄钰淇',krCount:13,confidence:88,status:'yellow',statusLabel:'滞后',
+       krs:[{name:'算力集群100%国产化',conf:90,owner:'贾越'},{name:'存量数据库国产化替代率93%',conf:60,owner:'何嗣华'},{name:'对外交付客户数≥4家',conf:90,owner:'肖飞'}]},
+      {name:'ITD',leader:'孟祥月',krCount:14,confidence:83,status:'yellow',statusLabel:'滞后',
+       krs:[{name:'整车工作台建设完成30%-60%-100%',conf:80,owner:'刘松林'},{name:'完成数字员工3名',conf:70,owner:'张忠博'},{name:'完成26年研发工具软件采购',conf:90,owner:'郭佳杭'}]},
+      {name:'COM',leader:'徐海强',krCount:22,confidence:82,status:'yellow',statusLabel:'滞后',
+       krs:[{name:'红旗运营场景全覆盖',conf:50,owner:'鲍泽玉'},{name:'车联网与营销数据协同≥19个',conf:80,owner:'杜雨萌'},{name:'集团外营收达成1000万',conf:50,owner:'费奕繁'}]},
+      {name:'OTD',leader:'王扬',krCount:31,confidence:80,status:'yellow',statusLabel:'滞后',
+       krs:[{name:'OTD全部业务单元孪生',conf:80,owner:'各负责人'},{name:'OTD新增4名数字员工',conf:80,owner:'各负责人'},{name:'海外业务架构资产上线',conf:80,owner:'各负责人'}]},
+      {name:'安全保密',leader:'王晶宝',krCount:7,confidence:84,status:'yellow',statusLabel:'滞后',
+       krs:[{name:'安全作业平台推广覆盖率100%',conf:75,owner:'魏颖'},{name:'风险闭环处置率100%',conf:85,owner:'李娇'},{name:'技术防护合规率100%',conf:90,owner:'刘胜利'}]},
+      {name:'IPD',leader:'王扬',krCount:21,confidence:80,status:'yellow',statusLabel:'滞后',
+       krs:[{name:'IPD对外交付客户数≥2家',conf:50,owner:'于泳'},{name:'软件开发领域业务单元孪生率100%',conf:60,owner:'郭文慧'},{name:'IPD新增7个智能体',conf:85,owner:'于泳'}]},
+      {name:'运维',leader:'刘琳',krCount:9,confidence:80,status:'yellow',statusLabel:'滞后',
+       krs:[{name:'分子公司工单数量下降30%',conf:80,owner:'王润'},{name:'AI及自动化执行数量达5个',conf:90,owner:'赵金龙'},{name:'完成自主可控工作站适配测试',conf:50,owner:'王泉博'}]},
+      {name:'组织',leader:'柳中乔',krCount:10,confidence:72,status:'red',statusLabel:'风险',
+       krs:[{name:'优化CEO治理机制',conf:80,owner:'王博'},{name:'精准支撑分子公司组织调整',conf:65,owner:'牛菁菁'},{name:'组织资源运营效能提升',conf:65,owner:'徐振'}]},
+    ];
+
+    // 信心均值排名（真实数据）
+    const scoreRankList = [
+      {name:'数据',score:96},{name:'SEC',score:96},{name:'POM',score:95},
+      {name:'HCM',score:90},{name:'基础平台',score:88},{name:'规划',score:86},
+      {name:'AI',score:85},{name:'安全保密',score:84},{name:'ITD',score:83},
+      {name:'COM',score:82},{name:'OTD',score:80},{name:'运维',score:80},
+      {name:'IPD',score:80},{name:'组织',score:72},
+    ];
+
+    // 员工KR承接（真实数据）
+    const avatarColors = ['#7B61FF','#3A2AE4','#00B42A','#FF7D00','#0099CC','#E12535','#9747FF','#00808A','#D4380D','#1677FF'];
+    const employeeList = [
+      {name:'金鑫禹',krCount:3,color:avatarColors[0],krs:['关键业务对象100%连通','全部业务单元孪生','全级次数据资产目录覆盖率（1+X+Y）']},
+      {name:'娄睿琦',krCount:3,color:avatarColors[1],krs:['上线数字员工20名','智能决策化率达到70%','高级经理数智能力过关评价及结果应用']},
+      {name:'蒋汉卿',krCount:2,color:avatarColors[2],krs:['拓展标杆客户5家，营收达成1.1亿','组建跨领域产品推广团队']},
+      {name:'贾越',krCount:2,color:avatarColors[3],krs:['算力集群100%国产化，GPU算力全兼容','训推连续性100%']},
+      {name:'王晶宝',krCount:2,color:avatarColors[4],krs:['安全成熟度指标均达成"3.2"','网络安全重大事件零发生']},
+      {name:'于季芝',krCount:2,color:avatarColors[5],krs:['T/P能力焕新运营','T序列能力体系构建']},
+      {name:'武沛多',krCount:2,color:avatarColors[6],krs:['OpenMind建设','构建AI原生平台能力']},
+      {name:'陶建尧',krCount:2,color:avatarColors[7],krs:['总部及分子公司达成8199指标','组织分子公司至少开展2项自主可控集采']},
+      {name:'李思南',krCount:2,color:avatarColors[8],krs:['"三者"转型推进','T序列能力体系构建']},
+      {name:'谭泽府',krCount:1,color:avatarColors[9],krs:['二级子公司年内要100%上线穿透式管理平台']},
+    ];
+
+    // AI预警（基于真实低信心KR）
+    const aiWarnings = [
+      {kr:'IPD对外交付客户数不少于2家，100%完成合同交付',team:'IPD团队',level:'红',reason:'信心指数仅50%，当前交付客户数0家，市场开拓进展严重滞后，存在无法完成全年目标风险。'},
+      {kr:'COM红旗运营场景全覆盖效能达标',team:'COM团队',level:'红',reason:'信心指数50%，当前运营效能低于目标，线索试驾率12%未达标，整体灯塔指标达成存在较大缺口。'},
+      {kr:'组织资源专业化能力提升（KR4）',team:'组织团队',level:'红',reason:'信心指数60%，组织主数据EOS系统建设尚未开始，分子公司推广路径不清晰，整体组织资源改革推进风险高。'},
+      {kr:'分子公司T/P五人组配置率100%',team:'规划团队',level:'黄',reason:'信心指数60%，当前五人组配置率0%，需在全集团14家分子公司完成配置，任务量大且进度滞后。'},
+      {kr:'存量数据库国产化替代率93%',team:'基础平台',level:'黄',reason:'信心指数60%，当前国产化替代率90%，3%差距涉及多套遗留系统，改造难度大，周期紧张。'},
+    ];
+
+    // 资源错配
+    const resourceWarnings = [
+      {kr:'IPD对外交付客户',plan:60,actual:18,level:'红'},
+      {kr:'COM集团外营收1000万',plan:10,actual:48,level:'红'},
+      {kr:'OTD产品链孪生建设',plan:40,actual:18,level:'黄'},
+      {kr:'AI智能体28个建设',plan:15,actual:35,level:'黄'},
+      {kr:'数据库国产化替代',plan:8,actual:25,level:'黄'},
+    ];
+
+    // Sparklines（真实信心均值）
+    const sparkTeams = [
+      {key:'pom', name:'POM',  current:95, data:[90,91,92,92,93,94,93,94,95,95,95,95]},
+      {key:'data',name:'数据', current:96, data:[90,92,92,93,94,94,95,95,96,96,96,96]},
+      {key:'sec', name:'SEC',  current:96, data:[92,93,94,94,95,95,96,96,96,96,96,96]},
+      {key:'hcm', name:'HCM',  current:90, data:[85,86,87,88,88,89,89,90,89,90,90,90]},
+      {key:'ai',  name:'AI',   current:85, data:[88,87,86,86,85,85,84,84,85,85,85,85]},
+      {key:'com', name:'COM',  current:82, data:[86,85,84,83,83,82,82,81,82,82,82,82]},
+      {key:'org', name:'组织', current:72, data:[78,76,75,74,73,73,72,72,71,72,72,72]},
+    ];
+
+    const teamStatusClass = (s) => s==='green'?'s-tag-green':s==='yellow'?'s-tag-yellow':'s-tag-red';
+
+    const initSparklines = () => {
+      sparkTeams.forEach(t => {
+        const dom = document.getElementById('spark-'+t.key);
+        if (!dom) return;
+        const chart = echarts.init(dom);
+        const color = t.current>=90?'#00B42A':t.current>=80?'#FF7D00':'#E12535';
+        chart.setOption({
+          grid:{top:2,bottom:2,left:2,right:2},
+          xAxis:{type:'category',show:false,data:t.data.map((_,i)=>i)},
+          yAxis:{type:'value',show:false,min:Math.min(...t.data)-5,max:100},
+          series:[{
+            type:'line',data:t.data,smooth:true,symbol:'none',
+            lineStyle:{color,width:2},
+            areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,
+              colorStops:[{offset:0,color:color+'40'},{offset:1,color:color+'00'}]}}
+          }],
+          animation:true,animationDuration:800
+        });
+      });
+    };
+
+    onMounted(() => nextTick(() => setTimeout(initSparklines, 100)));
+
+    return {
+      activeNav, activeCycle, navItems,
+      goNav, goTo, onMetricCardClick, goTeamOkr, goTeamOkrByName,
+      metricCards, teamOkrList, scoreRankList, employeeList,
+      aiWarnings, resourceWarnings, sparkTeams, teamStatusClass,
+    };
+  }
+}).use(ElementPlus).mount('#app');
+</script>
+</body>
+</html>
