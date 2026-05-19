@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OKR 管理平台 - 员工 OKR 管理</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/element-plus@2/dist/index.full.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2/dist/index.css">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+:root{
+  --P:#3A2AE4;--PL:#ECF1FF;--PH:#2E21BF;
+  --G:#00B42A;--GL:#E8FFEA;
+  --W:#FF7D00;--WL:#FFF7E8;
+  --E:#E12535;--EL:#FFECE8;
+  --T1:#262629;--T2:#666672;--T3:#A0A0A8;
+  --BD:#E5E6EB;--BG:#F6F6F8;--CD:#FFFFFF
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans SC',sans-serif;background:var(--BG);color:var(--T1);font-size:14px;min-height:100vh}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:#D0D0D8;border-radius:2px}
+.app{display:flex;height:100vh;overflow:hidden}
+
+/* sidebar */
+.sb{width:220px;background:#fff;border-right:1px solid var(--BD);display:flex;flex-direction:column;flex-shrink:0}
+.sb-top{height:56px;padding:0 20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--BD)}
+.sb-logo{width:32px;height:32px;background:linear-gradient(135deg,#3A2AE4,#6B5DF0);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px}
+.sb-usr{padding:16px 20px;border-bottom:1px solid var(--BD);display:flex;align-items:center;gap:10px}
+.sb-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#ECF1FF,#C5C0F8);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--P)}
+.sb-nav{flex:1;padding:12px 0;overflow-y:auto}
+.ni{height:40px;padding:0 20px;display:flex;align-items:center;gap:10px;cursor:pointer;color:var(--T2);font-size:13px;transition:all .15s;border-right:2px solid transparent}
+.ni:hover{background:var(--PL);color:var(--P)}
+.ni.on{background:var(--PL);color:var(--P);font-weight:500;border-right-color:var(--P)}
+.nb{margin-left:auto;background:var(--E);color:#fff;font-size:10px;font-weight:600;padding:1px 5px;border-radius:8px;min-width:18px;text-align:center}
+
+/* main */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.tb{height:56px;background:#fff;border-bottom:1px solid var(--BD);padding:0 24px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.tb-title{font-size:15px;font-weight:600}
+.fb{background:#fff;border-bottom:1px solid var(--BD);padding:10px 24px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.fi{height:32px;border:1px solid var(--BD);border-radius:6px;padding:0 10px;font-size:13px;font-family:inherit;color:var(--T1);outline:none;transition:border-color .15s;background:#fff}
+.fi:focus{border-color:var(--P)}
+
+/* role pill */
+.rp{height:26px;padding:0 12px;border-radius:13px;font-size:12px;border:1px solid var(--BD);background:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all .15s}
+.rp.on{background:var(--PL);border-color:var(--P);color:var(--P);font-weight:500}
+
+/* split */
+.page{flex:1;display:flex;overflow:hidden}
+.lp{width:300px;flex-shrink:0;border-right:1px solid var(--BD);background:#fff;overflow-y:auto;display:flex;flex-direction:column}
+.rp-area{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column}
+
+/* profile card */
+.ph{padding:24px 20px 16px;border-bottom:1px solid var(--BD);display:flex;flex-direction:column;align-items:center;text-align:center}
+.pav{width:68px;height:68px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#fff;margin-bottom:12px;box-shadow:0 4px 16px rgba(0,0,0,.2)}
+.pname{font-size:18px;font-weight:700;margin-bottom:3px}
+.pid{font-size:11px;color:var(--T3);margin-bottom:8px}
+.pmeta{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:8px}
+.ptags{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+
+/* tags */
+.tag{height:20px;padding:0 7px;border-radius:4px;font-size:11px;font-weight:500;display:inline-flex;align-items:center;white-space:nowrap}
+.t-b{background:#ECF1FF;color:#3A2AE4}
+.t-g{background:#E8FFEA;color:#00B42A}
+.t-a{background:#FFFBEC;color:#875800}
+.t-r{background:#FFECE8;color:#E12535}
+.t-n{background:#F2F3F5;color:#666672}
+.t-c{background:#ECFAFF;color:#0099CC}
+.t-p{background:#F5F0FF;color:#6B21A8}
+
+/* kpi */
+.ks{padding:14px 18px;border-bottom:1px solid var(--BD)}
+.st{font-size:11px;font-weight:600;color:var(--T3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.kg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kc{background:var(--BG);border-radius:7px;padding:9px 11px}
+.kl{font-size:11px;color:var(--T2);margin-bottom:3px}
+.kv{font-size:19px;font-weight:700;line-height:1}
+.ksb{font-size:10px;color:var(--T3);margin-top:2px}
+.pt{height:5px;background:#EEEEF2;border-radius:3px;overflow:hidden;margin-top:5px}
+.pf{height:100%;border-radius:3px}
+
+/* kr list */
+.krl{padding:14px 18px;flex:1}
+.kri{padding:8px 0;border-bottom:1px solid #F5F5F8}
+.kri:last-child{border-bottom:none}
+.krin{font-size:12px;font-weight:500;color:var(--T1);line-height:1.4;margin-bottom:4px}
+.krip{display:flex;align-items:center;gap:6px}
+.krb{height:4px;flex:1;background:#EEEEF2;border-radius:2px;overflow:hidden}
+.krbf{height:100%;border-radius:2px}
+
+/* tab bar */
+.tabs{display:flex;border-bottom:1px solid var(--BD);margin-bottom:16px}
+.tab{height:40px;padding:0 20px;cursor:pointer;font-size:13px;color:var(--T2);border-bottom:2px solid transparent;transition:all .15s;display:flex;align-items:center;gap:6px}
+.tab.on{color:var(--P);border-bottom-color:var(--P);font-weight:500}
+
+/* task table */
+.tw{background:var(--CD);border-radius:8px;border:1px solid var(--BD);overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.tt{width:100%;border-collapse:collapse}
+.tt th{padding:9px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--T3);background:#F4F5FB;border-bottom:1px solid var(--BD);white-space:nowrap}
+.tt td{padding:10px 14px;border-bottom:1px solid #F0F0F6;font-size:12px;vertical-align:middle;cursor:pointer;transition:background .12s}
+.tt tr:hover td{background:#F7F8FF}
+.tt tr:last-child td{border-bottom:none}
+.tn{font-size:13px;font-weight:500;color:var(--T1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px}
+.tks{font-size:11px;color:var(--T3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px}
+.hb{display:flex;align-items:center;gap:6px}
+.ht{width:52px;height:4px;background:#EEEEF2;border-radius:2px;overflow:hidden}
+.hf{height:100%;border-radius:2px;background:linear-gradient(90deg,#3A2AE4,#6B5DF0)}
+.sc{display:inline-flex;align-items:center;justify-content:center;min-width:32px;height:20px;border-radius:4px;font-size:11px;font-weight:700;padding:0 5px}
+.sc-h{background:#E8FFEA;color:#00B42A}
+.sc-m{background:#FFFBEC;color:#875800}
+.sc-l{background:#FFECE8;color:#E12535}
+
+/* readonly notice */
+.ro-notice{display:flex;align-items:center;gap:8px;padding:10px 14px;background:#F4F5FB;border-radius:6px;font-size:12px;color:var(--T2);margin-bottom:14px;border:1px solid var(--BD)}
+.ro-field{padding:7px 10px;background:#F9FAFB;border:1px solid var(--BD);border-radius:6px;font-size:13px;color:var(--T1);min-height:32px;display:flex;align-items:center}
+.ro-stars{font-size:18px;color:#FFB800;letter-spacing:1px}
+
+/* overlay + drawer */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.32);z-index:998;opacity:0;pointer-events:none;transition:opacity .25s}
+.ov.on{opacity:1;pointer-events:all}
+.dr{position:fixed;top:0;right:0;bottom:0;width:620px;background:#fff;z-index:999;box-shadow:-6px 0 30px rgba(0,0,0,.12);transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1),width .25s ease;display:flex;flex-direction:column;overflow:hidden}
+.dr.on{transform:translateX(0)}
+.dr.wide{width:880px}
+.dr-hd{padding:18px 24px 0;border-bottom:1px solid var(--BD);flex-shrink:0}
+.dr-top{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.dr-tit{font-size:15px;font-weight:600;flex:1}
+.dr-cls{width:28px;height:28px;border-radius:6px;border:1px solid var(--BD);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--T2);transition:all .15s}
+.dr-cls:hover{background:#FFECE8;color:var(--E);border-color:var(--E)}
+.dr-tabs{display:flex}
+.drt{height:38px;padding:0 16px;cursor:pointer;font-size:13px;color:var(--T2);border-bottom:2px solid transparent;transition:all .15s;display:flex;align-items:center}
+.drt.on{color:var(--P);border-bottom-color:var(--P);font-weight:500}
+.dr-sp{display:flex;flex:1;overflow:hidden}
+.dr-fm{flex:1;overflow-y:auto;padding:20px 24px}
+.dr-ai{width:270px;flex-shrink:0;background:linear-gradient(180deg,#F5F3FF,#EEF2FF);border-left:1px solid #C5C0F8;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.dr-bd{flex:1;overflow-y:auto;padding:20px 24px}
+.dr-ft{padding:14px 24px;border-top:1px solid var(--BD);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0}
+
+/* form */
+.fs{margin-bottom:16px}
+.fs-t{font-size:11px;font-weight:600;color:var(--T3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--BD)}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fi2{display:flex;flex-direction:column;gap:4px}
+.fl{font-size:12px;color:var(--T2);font-weight:500}
+.req{color:var(--E);margin-left:2px}
+.finp,.fsel{height:32px;border:1px solid var(--BD);border-radius:6px;padding:0 10px;font-size:13px;font-family:inherit;color:var(--T1);outline:none;transition:border-color .15s;background:#fff;width:100%}
+.finp:focus,.fsel:focus{border-color:var(--P);box-shadow:0 0 0 2px rgba(58,42,228,.08)}
+
+/* stars */
+.stars{display:flex;align-items:center;gap:3px}
+.star{font-size:22px;cursor:pointer;line-height:1;color:#E5E6EB;transition:transform .1s}
+.star.on{color:#FFB800}
+.star:hover{transform:scale(1.15)}
+.stb{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:linear-gradient(135deg,#ECF1FF,#E8E5FF);border-radius:8px;border:1px solid #C5C0F8;margin-top:4px}
+.stn{font-size:34px;font-weight:900;line-height:1}
+
+/* ai panel */
+.ai-hd2{font-size:12px;font-weight:700;color:var(--P);display:flex;align-items:center;gap:5px;margin-bottom:4px}
+.ai-tot{text-align:center;padding:14px;background:#fff;border-radius:10px;border:2px solid var(--P)}
+.ai-tn{font-size:38px;font-weight:900;line-height:1}
+.ai-ts{font-size:11px;color:var(--T2);margin-top:2px}
+.ai-fo{font-size:10px;color:var(--T3);text-align:center;background:#F9FAFB;padding:6px;border-radius:5px}
+.ai-dc{background:#fff;border-radius:8px;border:1px solid #C5C0F8;padding:10px 12px}
+.ai-dh{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.ai-dl{font-size:12px;font-weight:600;color:var(--T1)}
+.ai-ds{display:flex;align-items:center;gap:5px}
+.ai-dst{color:#FFB800;font-size:13px}
+.ai-dn{font-size:15px;font-weight:800;color:var(--P)}
+.ai-dr{font-size:10px;font-weight:600;color:var(--P);background:var(--PL);padding:1px 7px;border-radius:10px;margin-bottom:5px;display:inline-block}
+.ai-dd{font-size:11px;color:var(--T2);line-height:1.65}
+.ai-ab{width:100%;height:34px;border-radius:6px;background:var(--P);color:#fff;border:none;cursor:pointer;font-size:13px;font-family:inherit;font-weight:500;display:flex;align-items:center;justify-content:center;gap:6px}
+.ai-ab:hover{background:var(--PH)}
+.ald{display:flex;flex-direction:column;align-items:center;padding:24px 0;gap:12px}
+.dots{display:flex;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--P);animation:bnc .8s infinite}
+.dot:nth-child(2){animation-delay:.15s}
+.dot:nth-child(3){animation-delay:.3s}
+@keyframes bnc{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-6px);opacity:1}}
+
+/* timeline */
+.tli{display:flex;gap:12px;padding-bottom:14px;position:relative}
+.tli:last-child{padding-bottom:0}
+.tli:not(:last-child)::before{content:'';position:absolute;left:9px;top:20px;bottom:0;width:2px;background:var(--BD)}
+.tld{width:20px;height:20px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;margin-top:1px;position:relative;z-index:1}
+.tld-p{background:var(--P)}.tld-g{background:var(--T3)}
+.tld2{font-size:11px;color:var(--T3);margin-bottom:3px}
+.tlt{font-size:13px;color:var(--T1);line-height:1.6}
+.tlr{font-size:11px;color:var(--T2);background:#F6F6F8;border-radius:4px;padding:5px 9px;margin-top:4px;border-left:3px solid var(--P)}
+
+/* modal */
+.mov{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1100;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.mov.on{opacity:1;pointer-events:all}
+.mo{background:#fff;border-radius:12px;width:460px;max-width:92vw;box-shadow:0 8px 40px rgba(0,0,0,.15);transform:scale(.96);transition:transform .2s}
+.mov.on .mo{transform:scale(1)}
+.mo-hd{padding:20px 24px 14px;border-bottom:1px solid var(--BD);display:flex;align-items:center;gap:10px}
+.mo-tit{font-size:15px;font-weight:600;flex:1}
+.mo-bd{padding:20px 24px}
+.mo-ft{padding:14px 24px;border-top:1px solid var(--BD);display:flex;justify-content:flex-end;gap:8px}
+.mo-w{background:#FFF7E8;border:1px solid #FFD591;border-radius:6px;padding:10px 14px;font-size:12px;color:#875800;margin-bottom:14px;line-height:1.6}
+.fta{border:1px solid var(--BD);border-radius:6px;padding:9px;font-size:13px;font-family:inherit;color:var(--T1);outline:none;resize:vertical;min-height:60px;width:100%;transition:border-color .15s;line-height:1.6}
+.fta:focus{border-color:var(--P)}
+
+/* AI eval drawer */
+.aiov{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;opacity:0;pointer-events:none;transition:opacity .25s}
+.aiov.on{opacity:1;pointer-events:all}
+.aidr{position:fixed;top:0;right:0;bottom:0;width:660px;background:#fff;z-index:1001;box-shadow:-8px 0 40px rgba(58,42,228,.15);transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden}
+.aidr.on{transform:translateX(0)}
+.aihd{padding:22px 28px 20px;background:linear-gradient(135deg,#1A0F7A,#3A2AE4 52%,#6B5DF0);flex-shrink:0;position:relative;overflow:hidden}
+.aihd::before{content:'';position:absolute;top:-60px;right:-60px;width:240px;height:240px;border-radius:50%;background:rgba(255,255,255,.04)}
+.aihd-in{display:flex;align-items:flex-start;gap:14px;position:relative}
+.aihd-ico{width:48px;height:48px;background:rgba(255,255,255,.15);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.aihd-tx{flex:1}
+.aihd-lb{font-size:10px;color:rgba(255,255,255,.55);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:4px}
+.aihd-tit{font-size:17px;font-weight:700;color:#fff;margin-bottom:5px}
+.aihd-sub{font-size:12px;color:rgba(255,255,255,.7);line-height:1.5}
+.aihd-cls{width:30px;height:30px;border-radius:7px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;color:rgba(255,255,255,.8);flex-shrink:0;transition:all .15s}
+.aihd-cls:hover{background:rgba(255,255,255,.22)}
+.aibd{flex:1;overflow-y:auto;padding:24px 28px}
+.ai-load{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;gap:18px}
+.ai-load-txt{font-size:14px;color:var(--T2)}
+
+/* score banner */
+.scbn{display:flex;gap:20px;background:linear-gradient(135deg,#F5F3FF,#EEF2FF);border:1px solid #C5C0F8;border-radius:12px;padding:20px 22px;margin-bottom:20px;align-items:center}
+.scrg{width:88px;height:88px;flex-shrink:0;position:relative}
+.scin{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.scn{font-size:32px;font-weight:800;line-height:1}
+.scu{font-size:11px;color:var(--T2)}
+.scst{font-size:14px;font-weight:700;color:var(--T1);margin-bottom:6px}
+.scds{font-size:12px;color:var(--T2);line-height:1.75}
+
+/* radar wrap */
+.rdw{background:#F9FAFB;border-radius:10px;padding:16px 20px;margin-bottom:16px}
+.ai-sec{font-size:12px;font-weight:700;color:var(--T2);display:flex;align-items:center;gap:6px;margin-bottom:12px}
+
+/* diag cards */
+.dc{border-radius:8px;padding:12px 14px;margin-bottom:8px;border-left:3px solid}
+.dc:last-child{margin-bottom:0}
+.dc.str{background:#F0FFF6;border-color:#00B42A}
+.dc.rsk{background:#FFF5F5;border-color:#E12535}
+.dc.sug{background:#F5F3FF;border-color:#6B5DF0}
+.dc-tit{font-size:13px;font-weight:600;color:var(--T1);margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.dc-bd{font-size:12px;color:var(--T2);line-height:1.75}
+
+/* dim bars */
+.dbg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.dbr{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#fff;border-radius:6px;border:1px solid var(--BD)}
+
+/* btns */
+.btn{height:32px;padding:0 16px;border-radius:6px;font-size:13px;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-weight:500;transition:all .15s;border:none;white-space:nowrap}
+.btn-p{background:var(--P);color:#fff}.btn-p:hover{background:var(--PH)}
+.btn-d{background:#fff;border:1px solid var(--BD);color:var(--T1)}.btn-d:hover{border-color:var(--P);color:var(--P)}
+.btn-ai{background:linear-gradient(135deg,#3A2AE4,#6B5DF0);color:#fff;box-shadow:0 2px 8px rgba(58,42,228,.3)}.btn-ai:hover{box-shadow:0 4px 16px rgba(58,42,228,.4);transform:translateY(-1px)}
+.btn-g{background:transparent;border:1px dashed var(--P);color:var(--P)}.btn-g:hover{background:var(--PL)}
+.btn-e{background:var(--E);color:#fff}.btn-e:hover{background:#C01E2C}
+.btn-sm{height:26px;padding:0 10px;font-size:12px;border-radius:5px}
+
+/* EP overrides */
+.el-popper{z-index:9999!important}
+
+/* topo */
+.topo-wrap{flex:1;background:#fff;border-radius:8px;border:1px solid var(--BD);overflow:hidden;display:flex;flex-direction:column;min-height:580px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.topo-bar{padding:12px 16px;border-bottom:1px solid var(--BD);display:flex;align-items:center;gap:10px;flex-shrink:0;background:#FAFBFF}
+.topo-legend{display:flex;align-items:center;gap:12px;margin-left:auto}
+.leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--T2)}
+.leg-dot{width:10px;height:10px;border-radius:3px}
+</style>
+</head>
+<body>
+<div id="app">
+<div class="app">
+
+  <aside class="sb">
+    <div class="sb-top">
+      <div class="sb-logo">OKR</div>
+      <div style="line-height:1.25">
+        <div style="font-size:13px;font-weight:600">OKR 管理平台</div>
+        <div style="font-size:11px;color:var(--T2)">中国一汽</div>
+      </div>
+    </div>
+    <div class="sb-usr">
+      <div class="sb-av">华</div>
+      <div style="line-height:1.3">
+        <div style="font-size:13px;font-weight:500">华莹莹</div>
+        <div style="font-size:11px;color:var(--T2)">部门负责人</div>
+      </div>
+    </div>
+    <nav class="sb-nav">
+      <div v-for="n in navItems" :key="n.key" :class="n.key==='employees'?'ni on':'ni'" @click="goNav(n)">
+        <span>{{n.icon}}</span><span>{{n.label}}</span>
+        <span v-if="n.badge" class="nb">{{n.badge}}</span>
+      </div>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="tb">
+      <span class="tb-title">员工 OKR 管理</span>
+    </header>
+
+    <div class="fb">
+      <!-- 角色权限门禁：管理员可切换员工，普通员工只读锁定 -->
+      <template v-if="canSwitch">
+        <span style="font-size:13px;color:var(--T2);white-space:nowrap">当前查看：</span>
+        <select class="fi" style="width:200px" v-model="curId">
+          <option v-for="e in empList" :key="e.id" :value="e.id">{{e.name}} - {{e.team}} {{e.level}}</option>
+        </select>
+        <span :class="empTypeTagClass(curEmp.empType)" style="height:22px;font-size:11px">{{curEmp.empType}}</span>
+      </template>
+      <template v-else>
+        <span style="font-size:13px;color:var(--T2)">个人 OKR 数据</span>
+        <span class="tag t-n" style="height:22px">{{curEmp.name}} · 只读模式</span>
+      </template>
+
+      <!-- 角色切换演示胶囊 -->
+      <div style="display:flex;align-items:center;gap:6px;padding:0 10px;border-left:1px solid var(--BD);margin-left:8px">
+        <span style="font-size:11px;color:var(--T3)">演示角色：</span>
+        <button v-for="r in roleOpts" :key="r.key" :class="curRole===r.key?'rp on':'rp'" @click="curRole=r.key">{{r.label}}</button>
+      </div>
+
+      <div style="margin-left:auto;display:flex;gap:8px">
+        <button class="btn btn-ai" @click="openAiEval">✨ AI 员工效能评价</button>
+      </div>
+    </div>
+
+    <div class="page">
+      <!-- Left Panel: Profile Card -->
+      <div class="lp">
+        <div class="ph">
+          <div class="pav" :style="{background:curEmp.color}">{{curEmp.name[0]}}</div>
+          <div class="pname">{{curEmp.name}}</div>
+          <div class="pid">工号 {{curEmp.id}} · {{curEmp.role}}</div>
+          <div class="pmeta">
+            <span class="tag t-n" style="height:22px">{{curEmp.team}} 团队</span>
+            <span class="tag t-c" style="height:22px">{{curEmp.level}}</span>
+          </div>
+          <div class="ptags">
+            <span :class="empTypeTagClass(curEmp.empType)" style="height:22px">{{curEmp.empType}}</span>
+            <span v-if="curEmp.mainRole" class="tag t-g" style="height:22px">主：{{curEmp.mainRole}}</span>
+          </div>
+        </div>
+
+        <!-- KPIs -->
+        <div class="ks">
+          <div class="st">核心执行指标</div>
+          <div class="kg">
+            <div class="kc">
+              <div class="kl">本周期总工时</div>
+              <div class="kv" style="color:var(--P)">{{curEmp.totalHours}}<span style="font-size:13px;font-weight:400">h</span></div>
+              <div class="pt"><div class="pf" :style="{width:Math.min(curEmp.totalHours/500*100,100)+'%',background:'#3A2AE4'}"></div></div>
+            </div>
+            <div class="kc">
+              <div class="kl">主责 KR 数量</div>
+              <div class="kv" :style="{color:curEmp.leadKrs===0&&curEmp.empType!=='团队负责人'?'#E12535':'#262629'}">{{curEmp.leadKrs}}</div>
+              <div v-if="curEmp.leadKrs===0&&curEmp.empType!=='团队负责人'" class="ksb" style="color:#E12535">资源闲置风险</div>
+            </div>
+            <div class="kc">
+              <div class="kl">参与 KR 数量</div>
+              <div class="kv">{{curEmp.involvedKrs}}</div>
+            </div>
+            <div class="kc">
+              <div class="kl">任务均值系数</div>
+              <div class="kv" :style="{color:curEmp.avgScore>=16?'#3A2AE4':'#262629'}">{{curEmp.avgScore>0?curEmp.avgScore:'—'}}</div>
+              <div class="ksb">满分 20 分</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Workload pie chart -->
+        <div class="ks">
+          <div class="st">个人工时投入分布</div>
+          <div :id="'pie-'+curId" style="height:180px;width:100%"></div>
+        </div>
+
+        <!-- Lead KR list -->
+        <div class="krl">
+          <div class="st">主责 KR 清单</div>
+          <div v-if="!curEmp.leadKrList||curEmp.leadKrList.length===0" style="font-size:12px;color:var(--T3);padding:8px 0">暂无主责 KR</div>
+          <div v-for="(kr,i) in curEmp.leadKrList" :key="i" class="kri">
+            <div class="krin">{{kr.name}}</div>
+            <div class="krip">
+              <div class="krb"><div class="krbf" :style="{width:kr.conf+'%',background:kr.conf>=90?'#00B42A':kr.conf>=80?'#FF7D00':'#E12535'}"></div></div>
+              <span style="font-size:11px;font-weight:600;flex-shrink:0" :style="{color:kr.conf>=90?'#00B42A':kr.conf>=80?'#FF7D00':'#E12535'}">{{kr.conf}}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Content -->
+      <div class="rp-area">
+        <div class="tabs">
+          <div :class="tab===0?'tab on':'tab'" @click="tab=0">📋 我的任务</div>
+          <div :class="tab===1?'tab on':'tab'" @click="switchTopo">🔗 目标对齐全景图</div>
+        </div>
+
+        <!-- Tab 0: Task list -->
+        <template v-if="tab===0">
+          <div class="tw">
+            <table class="tt">
+              <thead>
+                <tr>
+                  <th style="width:76px">任务ID</th>
+                  <th style="min-width:180px">任务名称</th>
+                  <th style="width:72px">团队</th>
+                  <th style="width:72px">价值系数</th>
+                  <th style="width:72px">状态</th>
+                  <th style="width:96px">工时投入</th>
+                  <th style="width:72px">我的角色</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="task in curEmp.tasks" :key="task.id" @click="openDr(task)">
+                  <td><span style="font-size:11px;color:var(--T3);font-family:monospace">{{task.id.slice(-6)}}</span></td>
+                  <td>
+                    <div class="tn" :title="task.name">{{task.name}}</div>
+                    <div class="tks" v-if="task.kr">{{task.kr.slice(0,36)}}</div>
+                  </td>
+                  <td><span class="tag t-n" style="height:18px;font-size:10px">{{task.team}}</span></td>
+                  <td><span :class="scoreClass(task.score)">{{task.score}}</span></td>
+                  <td><span :class="stClass(task.status)" style="height:18px;font-size:10px">{{task.status}}</span></td>
+                  <td>
+                    <div class="hb">
+                      <div class="ht"><div class="hf" :style="{width:Math.min(task.hours/200*100,100)+'%'}"></div></div>
+                      <span style="font-size:11px;color:var(--T2)">{{task.hours}}h</span>
+                    </div>
+                  </td>
+                  <td><span :class="task.isLead?'tag t-b':'tag t-n'" style="height:18px;font-size:10px">{{task.isLead?'主责':'参与'}}</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </template>
+
+        <!-- Tab 1: Topo graph -->
+        <template v-if="tab===1">
+          <div class="topo-wrap">
+            <div class="topo-bar">
+              <span style="font-size:13px;font-weight:600">{{curEmp.name}} - 目标对齐全景图</span>
+              <span style="font-size:12px;color:var(--T2)">自上而下追溯 - {{topoNodeCount}} 个节点</span>
+              <div class="topo-legend">
+                <div class="leg"><div class="leg-dot" style="background:#6B5DF0"></div>战略源</div>
+                <div class="leg"><div class="leg-dot" style="background:#3A2AE4"></div>部门O</div>
+                <div class="leg"><div class="leg-dot" style="background:#E5E6EB;border:1px solid #ccc"></div>部门KR</div>
+                <div class="leg"><div class="leg-dot" style="background:#00B42A"></div>团队O</div>
+                <div class="leg"><div class="leg-dot" style="background:#E5E6EB;border:1px solid #ccc"></div>团队KR</div>
+                <div class="leg"><div class="leg-dot" style="background:#FF7D00"></div>我的任务</div>
+              </div>
+              <button class="btn btn-d btn-sm" @click="resetTopo">重置视图</button>
+            </div>
+            <div id="topo-chart" style="flex:1;width:100%;min-height:520px"></div>
+          </div>
+        </template>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Task Drawer overlay -->
+<div :class="drVisible?'ov on':'ov'" @click="drVisible=false"></div>
+
+<!-- Task Drawer -->
+<div :class="drVisible?(aiPanelVisible?'dr on wide':'dr on'):'dr'" style="transition:transform .3s cubic-bezier(.4,0,.2,1),width .25s ease">
+  <div class="dr-hd">
+    <div class="dr-top">
+      <div class="dr-tit">
+        任务详情
+        <span v-if="!canEdit" class="tag t-n" style="height:20px;font-size:10px;margin-left:8px">🔒 只读</span>
+      </div>
+      <button class="dr-cls" @click="drVisible=false">✕</button>
+    </div>
+    <div class="dr-tabs">
+      <div :class="drTab==='edit'?'drt on':'drt'" @click="drTab='edit'">Tab A · 详情与编辑</div>
+      <div :class="drTab==='log'?'drt on':'drt'" @click="drTab='log'">Tab B · 变更记录</div>
+    </div>
+  </div>
+
+  <!-- Tab A -->
+  <div v-if="drTab==='edit'" class="dr-sp">
+    <div class="dr-fm">
+
+      <!-- RBAC readonly notice -->
+      <div v-if="!canEdit" class="ro-notice">
+        🔒 当前角色（<b>{{curRole==='staff'?'普通员工':'查看者'}}</b>）为只读权限，无法修改任务信息。
+      </div>
+
+      <!-- Basic info -->
+      <div class="fs">
+        <div class="fs-t">基础信息</div>
+
+        <!-- Edit mode -->
+        <template v-if="canEdit">
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div class="fi2" style="grid-column:1/-1">
+              <div class="fl">任务名称</div>
+              <input class="finp" v-model="form.name"/>
+            </div>
+            <div class="fg" style="gap:10px">
+              <div class="fi2">
+                <div class="fl">归属团队</div>
+                <input class="finp" :value="form.team" readonly style="background:#F9F9FB;color:var(--T2)"/>
+              </div>
+              <div class="fi2">
+                <div class="fl">当前状态</div>
+                <select class="fsel" v-model="form.status">
+                  <option>待处理</option><option>进行中</option><option>已完成</option>
+                </select>
+              </div>
+              <div class="fi2">
+                <div class="fl">工时投入 (h)</div>
+                <input class="finp" type="number" v-model.number="form.hours" min="0"/>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- Readonly mode -->
+        <template v-else>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div class="fi2">
+              <div class="fl">任务名称</div>
+              <div class="ro-field">{{form.name}}</div>
+            </div>
+            <div class="fg" style="gap:10px">
+              <div class="fi2">
+                <div class="fl">归属团队</div>
+                <div class="ro-field"><span class="tag t-n">{{form.team}}</span></div>
+              </div>
+              <div class="fi2">
+                <div class="fl">当前状态</div>
+                <div class="ro-field"><span :class="stClass(form.status)">{{form.status}}</span></div>
+              </div>
+              <div class="fi2">
+                <div class="fl">工时投入</div>
+                <div class="ro-field">{{form.hours}} h</div>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <!-- Scoring model -->
+      <div class="fs">
+        <div class="fs-t" style="display:flex;align-items:center;gap:8px">
+          评分模型
+          <span style="font-size:10px;color:var(--T3);font-weight:400;background:#F2F3F5;padding:2px 8px;border-radius:10px">重要×3 + 困难×3 + 优先×2 + 领域×1，满分45</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div v-for="dim in dims" :key="dim.key" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#F9FAFF;border-radius:8px;border:1px solid var(--BD)">
+            <div style="width:70px;flex-shrink:0">
+              <div style="font-size:13px;font-weight:500;color:var(--T1)">{{dim.label}}</div>
+              <div style="font-size:10px;color:var(--P);font-weight:600">×{{dim.w}}</div>
+            </div>
+            <!-- Editable stars -->
+            <div v-if="canEdit" class="stars" style="flex:1">
+              <span v-for="s in 5" :key="s"
+                :class="s<=(hv[dim.key]||form[dim.key])?'star on':'star'"
+                @click="form[dim.key]=s"
+                @mouseover="hv[dim.key]=s"
+                @mouseleave="hv[dim.key]=0">
+                {{s<=(hv[dim.key]||form[dim.key])?'★':'☆'}}
+              </span>
+              <span style="font-size:15px;font-weight:700;color:var(--P);width:22px;text-align:center">{{form[dim.key]}}</span>
+            </div>
+            <!-- Readonly stars -->
+            <div v-else class="ro-stars" style="flex:1;letter-spacing:1px">
+              <span v-for="s in 5" :key="s" :style="{color:s<=form[dim.key]?'#FFB800':'#E5E6EB',fontSize:'18px'}">{{s<=form[dim.key]?'★':'☆'}}</span>
+              <span style="font-size:14px;font-weight:700;color:var(--P);margin-left:6px">{{form[dim.key]}}</span>
+            </div>
+          </div>
+        </div>
+        <div class="stb">
+          <div>
+            <div style="font-size:13px;color:var(--T2)">综合价值系数（加权）</div>
+            <div style="font-size:11px;color:var(--T3);margin-top:3px">
+              {{form.imp}}×3 + {{form.diff}}×3 + {{form.prio}}×2 + {{form.scope}}×1 = <b style="color:var(--P)">{{wtotal}}</b>
+            </div>
+          </div>
+          <div style="display:flex;align-items:baseline;gap:4px">
+            <div class="stn" :style="{color:wtotal>=40?'#00B42A':wtotal>=28?'#FF7D00':'#E12535'}">{{wtotal}}</div>
+            <div style="font-size:13px;color:var(--T3)"> / 45</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI side panel (edit only) -->
+    <div class="dr-ai" v-if="aiPanelVisible&&canEdit">
+      <div class="ai-hd2">✨ AI 智能打分建议</div>
+      <div v-if="aiLoading" class="ald">
+        <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        <div style="font-size:12px;color:var(--T2);text-align:center">正在分析任务复杂度...</div>
+      </div>
+      <template v-else>
+        <div class="ai-tot">
+          <div class="ai-tn" :style="{color:aiR.wt>=40?'#00B42A':aiR.wt>=28?'#FF7D00':'#E12535'}">{{aiR.wt}}</div>
+          <div class="ai-ts">综合价值系数 / 45</div>
+        </div>
+        <div class="ai-fo">{{aiR.imp}}×3 + {{aiR.diff}}×3 + {{aiR.prio}}×2 + {{aiR.scope}}×1 = {{aiR.wt}}</div>
+        <div v-for="dim in dims" :key="dim.key" class="ai-dc">
+          <div class="ai-dh">
+            <div class="ai-dl">{{dim.label}}</div>
+            <div class="ai-ds">
+              <span class="ai-dst">
+                <span v-for="s in 5" :key="s">{{s<=aiR[dim.key]?'★':'☆'}}</span>
+              </span>
+              <span class="ai-dn">{{aiR[dim.key]}}</span>
+            </div>
+          </div>
+          <div class="ai-dr">{{dim.rules[aiR[dim.key]-1]?dim.rules[aiR[dim.key]-1].l:''}}</div>
+          <div class="ai-dd">{{aiR.reasons?aiR.reasons[dim.key]:''}}</div>
+        </div>
+        <button class="ai-ab" @click="adoptAI">一键采纳 AI 评分</button>
+      </template>
+    </div>
+  </div>
+
+  <!-- Tab B -->
+  <div v-if="drTab==='log'" class="dr-bd">
+    <div v-if="form.logs&&form.logs.length>0">
+      <div v-for="(log,i) in form.logs" :key="i" class="tli">
+        <div :class="i===0?'tld tld-p':'tld tld-g'">{{i===0?'新':'旧'}}</div>
+        <div style="flex:1">
+          <div class="tld2">{{log.date}}</div>
+          <div class="tlt">{{log.text}}</div>
+          <div v-if="log.reason" class="tlr">原因：{{log.reason}}</div>
+        </div>
+      </div>
+    </div>
+    <div v-else style="text-align:center;padding:40px;color:var(--T3);font-size:13px">暂无变更记录</div>
+  </div>
+
+  <!-- Footer: canEdit shows action buttons, readonly shows close only -->
+  <div class="dr-ft">
+    <button class="btn btn-d" @click="drVisible=false">{{canEdit?'取消':'关闭'}}</button>
+    <template v-if="canEdit">
+      <button class="btn btn-g" @click="triggerAI">✨ AI 智能打分</button>
+      <button class="btn btn-p" @click="handleSave">保存修改</button>
+    </template>
+  </div>
+</div>
+
+<!-- Save Modal -->
+<div :class="saveMo?'mov on':'mov'">
+  <div class="mo">
+    <div class="mo-hd">
+      <span style="font-size:18px">⚠️</span>
+      <div class="mo-tit">保存前确认 · 变更原因必填</div>
+    </div>
+    <div class="mo-bd">
+      <div class="mo-w">本次修改将更新已归档的任务数据，操作不可撤销，将自动写入变更日志。</div>
+      <div class="fi2" style="margin-bottom:12px">
+        <div class="fl">变更原因分类 <span class="req">*</span></div>
+        <select class="fsel" v-model="chg.reason">
+          <option value="">请选择</option>
+          <option>业务方向调整</option><option>资源缩减</option><option>难度超预期</option><option>日常迭代</option>
+        </select>
+      </div>
+      <div class="fi2">
+        <div class="fl">真实修改说明 <span class="req">*</span></div>
+        <textarea class="fta" v-model="chg.desc" rows="3" maxlength="200" placeholder="请详细填写变更背景..."></textarea>
+      </div>
+    </div>
+    <div class="mo-ft">
+      <button class="btn btn-d" @click="saveMo=false">返回</button>
+      <button class="btn btn-e" :disabled="!chg.reason||!chg.desc" @click="confirmSave">确认保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI Eval Overlay + Drawer -->
+<div :class="aiEvalVisible?'aiov on':'aiov'" @click="aiEvalVisible=false"></div>
+<div :class="aiEvalVisible?'aidr on':'aidr'">
+  <div class="aihd">
+    <div class="aihd-in">
+      <div class="aihd-ico">🤖</div>
+      <div class="aihd-tx">
+        <div class="aihd-lb">AI 员工效能深度诊断</div>
+        <div class="aihd-tit">{{curEmp.name}} - 个人效能评价报告</div>
+        <div class="aihd-sub">基于 {{curEmp.totalHours}}h 工时 - {{curEmp.leadKrs}} 个主责KR - {{curEmp.tasks?curEmp.tasks.length:0}} 个关联任务</div>
+      </div>
+      <button class="aihd-cls" @click="aiEvalVisible=false">✕</button>
+    </div>
+  </div>
+  <div class="aibd">
+    <div v-if="aiEvalLoading" class="ai-load">
+      <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      <div class="ai-load-txt">{{aiEvalLoadingText}}</div>
+    </div>
+    <template v-else>
+      <!-- Score banner -->
+      <div class="scbn">
+        <div class="scrg">
+          <svg width="88" height="88" viewBox="0 0 88 88">
+            <circle cx="44" cy="44" r="36" fill="none" stroke="#E5E6EB" stroke-width="8"/>
+            <circle cx="44" cy="44" r="36" fill="none"
+              :stroke="evalData.score>=85?'#00B42A':evalData.score>=70?'#FF7D00':'#E12535'"
+              stroke-width="8"
+              :stroke-dasharray="226.2"
+              :stroke-dashoffset="226.2*(1-evalData.score/100)"
+              stroke-linecap="round" transform="rotate(-90 44 44)"/>
+          </svg>
+          <div class="scin">
+            <div class="scn" :style="{color:evalData.score>=85?'#00B42A':evalData.score>=70?'#FF7D00':'#E12535'}">{{evalData.score}}</div>
+            <div class="scu">综合效能分</div>
+          </div>
+        </div>
+        <div style="flex:1">
+          <div class="scst">{{evalData.level}} - {{evalData.levelDesc}}</div>
+          <div class="scds">{{evalData.summary}}</div>
+        </div>
+      </div>
+
+      <!-- Radar -->
+      <div class="rdw">
+        <div class="ai-sec">四维效能雷达图</div>
+        <div :id="'eval-radar-'+curId" style="height:220px;width:100%"></div>
+        <div class="dbg">
+          <div v-for="dim in evalData.dims" :key="dim.name" class="dbr">
+            <span style="font-size:14px;flex-shrink:0">{{dim.icon}}</span>
+            <div style="flex:1">
+              <div style="font-size:11px;color:var(--T2);margin-bottom:3px">{{dim.name}}</div>
+              <div style="height:4px;background:#EEEEF2;border-radius:2px;overflow:hidden">
+                <div :style="{width:dim.score+'%',height:'100%',borderRadius:'2px',background:dim.score>=80?'#3A2AE4':dim.score>=60?'#FF7D00':'#E12535'}"></div>
+              </div>
+            </div>
+            <div style="font-size:13px;font-weight:700;flex-shrink:0" :style="{color:dim.score>=80?'#3A2AE4':dim.score>=60?'#FF7D00':'#E12535'}">{{dim.score}}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Strengths -->
+      <div style="margin-bottom:8px">
+        <div class="ai-sec">效能亮点</div>
+        <div v-for="(s,i) in evalData.strengths" :key="i" class="dc str">
+          <div class="dc-tit">✅ {{s.title}}</div>
+          <div class="dc-bd">{{s.body}}</div>
+        </div>
+      </div>
+
+      <!-- Risks -->
+      <div style="margin-bottom:8px">
+        <div class="ai-sec">预警与风险</div>
+        <div v-for="(r,i) in evalData.risks" :key="i" class="dc rsk">
+          <div class="dc-tit">⚠️ {{r.title}}</div>
+          <div class="dc-bd">{{r.body}}</div>
+        </div>
+      </div>
+
+      <!-- Suggests -->
+      <div>
+        <div class="ai-sec">管理层行动建议</div>
+        <div v-for="(s,i) in evalData.suggests" :key="i" class="dc sug">
+          <div class="dc-tit">{{s.title}}</div>
+          <div class="dc-bd">{{s.body}}</div>
+        </div>
+      </div>
+    </template>
+  </div>
+</div>
+
+</div>
+<script>
+const {createApp, ref, computed, watch, nextTick} = Vue;
+createApp({
+  setup() {
+    // nav
+    const navItems = [
+      {key:'dashboard', icon:'📊', label:'战略仪表盘', badge:null,  href:'index.html'},
+      {key:'strategy',  icon:'🎯', label:'部门战略',   badge:null,  href:'dept_strategy.html'},
+      {key:'dept-okr',  icon:'🏛️', label:'部门 OKR',  badge:null,  href:'dept_okr.html'},
+      {key:'team-okr',  icon:'👥', label:'团队 OKR',  badge:218,   href:'team_okr.html'},
+      {key:'tasks',     icon:'✅', label:'任务管理',   badge:798,   href:'task_center.html'},
+      {key:'employees', icon:'👤', label:'员工 OKR',  badge:null,  href:'personal_okr.html'},
+    ];
+    const goNav = (item) => { if (item.href) window.location.href = item.href; };
+
+    // RBAC
+    const roleOpts = [
+      {key:'manager', label:'部门负责人'},
+      {key:'leader',  label:'团队负责人'},
+      {key:'staff',   label:'普通员工'},
+    ];
+    const curRole   = ref('manager');
+    const canSwitch = computed(() => curRole.value === 'manager' || curRole.value === 'leader');
+    const canEdit   = computed(() => curRole.value === 'manager' || curRole.value === 'leader');
+
+    const empTypeTagClass = (type) => {
+      if (type === '团队负责人') return 'tag t-b';
+      if (type === '骨干员工')   return 'tag t-a';
+      if (type === '高潜员工')   return 'tag t-p';
+      return 'tag t-n';
+    };
+    const scoreClass = (s) => { if (s >= 40) return 'sc sc-h'; if (s >= 28) return 'sc sc-m'; return 'sc sc-l'; };
+    const stClass    = (s) => { if (s === '进行中') return 'tag t-a'; if (s === '已完成') return 'tag t-g'; return 'tag t-n'; };
+
+    // Employee data
+    const empList = ref([
+      {
+        id:'10159911', name:'马智博', role:'产品管理工程师', level:'T8', team:'HCM', empType:'团队负责人',
+        color:'#3A2AE4', mainRole:'团队管理', totalHours:340, leadKrs:0, involvedKrs:10, avgScore:18,
+        leadKrList:[],
+        workload:[{name:'O1工作台建设',hours:140},{name:'O4集团外收入',hours:80},{name:'团队管理',hours:70},{name:'O3智能体',hours:30},{name:'其他',hours:20}],
+        tasks:[
+          {id:'4655971961',name:'HRM战队级任务（新）',team:'HCM',kr:'【O1】HCM产品链工作台建设与运营',imp:5,diff:4,prio:3,scope:4,score:16,status:'进行中',hours:174,isLead:false,logs:[{date:'2026-03-17',text:'马智博 创建任务',type:'p'}]},
+          {id:'4655972116',name:'培训赋能作业平台（新）',team:'HCM',kr:'【O3】HCM产品链智能体建设',imp:5,diff:4,prio:3,scope:4,score:16,status:'进行中',hours:88,isLead:false,logs:[{date:'2026-03-17',text:'马智博 创建任务',type:'p'}]},
+          {id:'4655971909',name:'招募配置作业平台（新）',team:'HCM',kr:'【O1】HCM产品链工作台建设与运营',imp:5,diff:4,prio:3,scope:4,score:16,status:'进行中',hours:62,isLead:false,logs:[{date:'2026-03-17',text:'马智博 创建任务',type:'p'}]},
+        ]
+      },
+      {
+        id:'10005814', name:'田志伟', role:'产品管理工程师', level:'T7', team:'HCM', empType:'骨干员工',
+        color:'#FF7D00', mainRole:'KR主责', totalHours:420, leadKrs:2, involvedKrs:9, avgScore:17,
+        leadKrList:[{name:'HCM产品链集团外收入1000万',conf:80},{name:'完成e汽学产品100%重构',conf:90}],
+        workload:[{name:'O4集团外收入',hours:180},{name:'O5信创',hours:140},{name:'O1工作台',hours:60},{name:'O2穿透管控',hours:40}],
+        tasks:[
+          {id:'4655971941',name:'薪酬激励作业平台（新）',team:'HCM',kr:'【O1】HCM产品链工作台建设与运营',imp:5,diff:4,prio:5,scope:5,score:19,status:'进行中',hours:95,isLead:true,logs:[{date:'2026-03-17',text:'田志伟 创建任务',type:'p'}]},
+          {id:'4655971960',name:'应用系统运维（新）',team:'HCM',kr:'【O4】HCM产品链集团外收入1000万',imp:5,diff:4,prio:3,scope:4,score:16,status:'进行中',hours:60,isLead:true,logs:[{date:'2026-03-17',text:'田志伟 创建任务',type:'p'},{date:'2026-04-30',text:'田志伟 更新工时',type:'g',reason:'日常迭代 - 外部销售活动增加工时'}]},
+          {id:'4655971901',name:'HRM运营工作台（新）',team:'HCM',kr:'【O4】HCM产品链集团外收入1000万',imp:5,diff:4,prio:3,scope:4,score:16,status:'待处理',hours:40,isLead:false,logs:[{date:'2026-03-17',text:'田志伟 创建任务',type:'p'}]},
+        ]
+      },
+      {
+        id:'10079929', name:'王峰', role:'项目管理工程师', level:'T8', team:'HCM', empType:'骨干员工',
+        color:'#00B42A', mainRole:'KR主责', totalHours:510, leadKrs:3, involvedKrs:9, avgScore:16,
+        leadKrList:[{name:'基础人事中心全集团推广完成率100%',conf:90},{name:'PeopleSoft替换完成率100%',conf:90},{name:'完成年度网络安全专项工作',conf:95}],
+        workload:[{name:'O1基础人事推广',hours:200},{name:'O2PeopleSoft替换',hours:160},{name:'O6网络安全',hours:90},{name:'其他协调',hours:60}],
+        tasks:[
+          {id:'4655971956',name:'员工关系作业平台（新）',team:'HCM',kr:'【O1】HCM产品链工作台建设与运营',imp:5,diff:4,prio:5,scope:5,score:19,status:'进行中',hours:180,isLead:true,logs:[{date:'2026-03-17',text:'王峰 主责该任务',type:'p'}]},
+          {id:'4655971960b',name:'应用系统运维（新）',team:'HCM',kr:'【O6】网络安全专项工作',imp:5,diff:4,prio:3,scope:3,score:15,status:'进行中',hours:90,isLead:true,logs:[{date:'2026-03-17',text:'王峰 负责网络安全',type:'p'}]},
+          {id:'4655971938',name:'员工能力作业平台（新）',team:'HCM',kr:'【O1】HCM产品链工作台建设与运营',imp:5,diff:4,prio:4,scope:4,score:17,status:'进行中',hours:140,isLead:false,logs:[{date:'2026-03-17',text:'王峰 参与该任务',type:'p'}]},
+          {id:'4655971908',name:'绩效管理作业平台（新）',team:'HCM',kr:'【O1】HCM产品链工作台建设与运营',imp:5,diff:4,prio:4,scope:4,score:17,status:'进行中',hours:100,isLead:false,logs:[{date:'2026-03-17',text:'王峰 参与该任务',type:'p'}]},
+        ]
+      },
+      {
+        id:'10232534', name:'董玉增', role:'产品管理工程师', level:'T5', team:'HCM', empType:'普通员工',
+        color:'#9747FF', mainRole:'KR主责', totalHours:280, leadKrs:1, involvedKrs:4, avgScore:17,
+        leadKrList:[{name:'5个智能体、3名数字员工',conf:95}],
+        workload:[{name:'O3智能体建设',hours:168},{name:'O1工作台',hours:70},{name:'O6安全',hours:28},{name:'其他',hours:14}],
+        tasks:[
+          {id:'4655970191',name:'薪酬激励作业平台',team:'HCM',kr:'【O3】HCM产品链智能体建设',imp:5,diff:4,prio:3,scope:5,score:17,status:'进行中',hours:120,isLead:true,logs:[{date:'2026-03-17',text:'董玉增 主责智能体建设',type:'p'}]},
+          {id:'4655971938b',name:'员工能力作业平台（新）',team:'HCM',kr:'【O1】HCM产品链工作台建设与运营',imp:5,diff:4,prio:4,scope:4,score:17,status:'进行中',hours:70,isLead:false,logs:[{date:'2026-03-17',text:'董玉增 参与O1工作台',type:'p'}]},
+          {id:'4655971940',name:'干部管理作业平台（新）',team:'HCM',kr:'【O3】HCM产品链智能体建设',imp:5,diff:4,prio:4,scope:4,score:17,status:'进行中',hours:90,isLead:false,logs:[{date:'2026-03-17',text:'董玉增 参与干部管理',type:'p'}]},
+        ]
+      },
+      {
+        id:'10084630', name:'李安', role:'前后端开发工程师', level:'T5', team:'HCM', empType:'高潜员工',
+        color:'#E12535', mainRole:'', totalHours:160, leadKrs:0, involvedKrs:4, avgScore:0,
+        leadKrList:[],
+        workload:[{name:'O1工作台参与',hours:120},{name:'O2穿透管控',hours:40}],
+        tasks:[
+          {id:'4655971941b',name:'薪酬激励作业平台（新）',team:'HCM',kr:'【O1】HCM产品链工作台建设与运营',imp:5,diff:4,prio:5,scope:5,score:19,status:'进行中',hours:80,isLead:false,logs:[{date:'2026-03-17',text:'李安 参与薪酬激励平台',type:'p'}]},
+          {id:'4655971956b',name:'员工关系作业平台（新）',team:'HCM',kr:'【O2】全级次穿透式经营管控',imp:5,diff:4,prio:5,scope:5,score:19,status:'进行中',hours:80,isLead:false,logs:[{date:'2026-03-17',text:'李安 参与员工关系平台',type:'p'}]},
+        ]
+      },
+      // ── 其他团队核心员工（来自 dashboard KR负责人TOP10）─────────────────
+      {
+        id:'EXT001', name:'金鑫禹', role:'数据架构师', level:'T8', team:'数据', empType:'骨干员工',
+        color:'#7B61FF', mainRole:'KR主责', totalHours:320, leadKrs:3, involvedKrs:5, avgScore:18,
+        leadKrList:[{name:'关键业务对象100%连通',conf:94},{name:'全部业务单元孪生',conf:86},{name:'全级次数据资产目录覆盖率',conf:92}],
+        workload:[{name:'数据资产目录',hours:140},{name:'业务单元孪生',hours:110},{name:'其他',hours:70}],
+        tasks:[
+          {id:'EXT001-T1',name:'数据资产目录建设',team:'数据',kr:'全级次数据资产目录覆盖率（1+X+Y）',imp:5,diff:4,prio:4,scope:4,score:38,status:'进行中',hours:140,isLead:true,logs:[{date:'2026-03-11',text:'金鑫禹 创建任务',type:'p'}]},
+          {id:'EXT001-T2',name:'关键业务对象连通专项',team:'数据',kr:'关键业务对象100%连通',imp:5,diff:4,prio:5,scope:5,score:41,status:'进行中',hours:110,isLead:true,logs:[{date:'2026-03-11',text:'金鑫禹 创建任务',type:'p'}]},
+        ]
+      },
+      {
+        id:'EXT002', name:'娄睿琦', role:'产品管理工程师', level:'T7', team:'规划', empType:'骨干员工',
+        color:'#3A2AE4', mainRole:'KR主责', totalHours:290, leadKrs:3, involvedKrs:6, avgScore:17,
+        leadKrList:[{name:'上线数字员工20名',conf:84},{name:'高级经理数智能力过关评价',conf:88},{name:'智能决策化率达到70%',conf:89}],
+        workload:[{name:'数字员工建设',hours:120},{name:'高管评价',hours:100},{name:'其他',hours:70}],
+        tasks:[
+          {id:'EXT002-T1',name:'数字员工认证上线专项',team:'规划',kr:'上线数字员工20名',imp:5,diff:4,prio:4,scope:4,score:37,status:'进行中',hours:120,isLead:true,logs:[{date:'2026-03-12',text:'娄睿琦 创建任务',type:'p'}]},
+          {id:'EXT002-T2',name:'高级经理数智能力评价组织',team:'规划',kr:'高级经理数智能力过关评价及结果应用',imp:4,diff:3,prio:4,scope:4,score:33,status:'进行中',hours:100,isLead:true,logs:[{date:'2026-03-12',text:'娄睿琦 创建任务',type:'p'}]},
+        ]
+      },
+      {
+        id:'EXT003', name:'蒋汉卿', role:'产品总监', level:'T9', team:'数据', empType:'团队负责人',
+        color:'#00B42A', mainRole:'团队管理', totalHours:380, leadKrs:2, involvedKrs:8, avgScore:19,
+        leadKrList:[{name:'拓展标杆客户5家，营收达成1.1亿',conf:85},{name:'组建跨领域产品推广团队',conf:90}],
+        workload:[{name:'标杆客户拓展',hours:170},{name:'推广团队建设',hours:130},{name:'团队管理',hours:80}],
+        tasks:[
+          {id:'EXT003-T1',name:'标杆客户拓展专项',team:'数据',kr:'拓展标杆客户5家，营收达成1.1亿',imp:5,diff:5,prio:5,scope:5,score:45,status:'进行中',hours:170,isLead:true,logs:[{date:'2026-03-11',text:'蒋汉卿 创建任务',type:'p'}]},
+        ]
+      },
+      {
+        id:'EXT004', name:'贾越', role:'基础架构工程师', level:'T8', team:'基础平台', empType:'骨干员工',
+        color:'#FF7D00', mainRole:'KR主责', totalHours:340, leadKrs:2, involvedKrs:5, avgScore:18,
+        leadKrList:[{name:'算力集群100%国产化，GPU算力全兼容',conf:90},{name:'训推连续性100%',conf:90}],
+        workload:[{name:'算力集群国产化',hours:180},{name:'训推稳定性',hours:100},{name:'其他',hours:60}],
+        tasks:[
+          {id:'EXT004-T1',name:'GPU算力国产化适配',team:'基础平台',kr:'算力集群100%国产化，GPU算力全兼容',imp:5,diff:5,prio:5,scope:5,score:45,status:'进行中',hours:180,isLead:true,logs:[{date:'2026-03-10',text:'贾越 创建任务',type:'p'}]},
+          {id:'EXT004-T2',name:'训推连续性保障专项',team:'基础平台',kr:'训推连续性100%',imp:5,diff:4,prio:5,scope:4,score:41,status:'进行中',hours:100,isLead:true,logs:[{date:'2026-03-10',text:'贾越 创建任务',type:'p'}]},
+        ]
+      },
+      {
+        id:'EXT005', name:'王晶宝', role:'安全工程师', level:'T8', team:'安全保密', empType:'骨干员工',
+        color:'#0099CC', mainRole:'KR主责', totalHours:300, leadKrs:2, involvedKrs:7, avgScore:17,
+        leadKrList:[{name:'安全成熟度指标均达成"3.2"',conf:81},{name:'网络安全重大事件零发生',conf:89}],
+        workload:[{name:'安全成熟度提升',hours:140},{name:'重大事件防控',hours:100},{name:'其他',hours:60}],
+        tasks:[
+          {id:'EXT005-T1',name:'安全管控中心建设',team:'安全保密',kr:'推进全集团网络安全能力建设',imp:5,diff:4,prio:4,scope:4,score:37,status:'进行中',hours:140,isLead:true,logs:[{date:'2026-03-16',text:'王晶宝 创建任务',type:'p'}]},
+        ]
+      },
+      {
+        id:'EXT006', name:'于季芝', role:'组织发展工程师', level:'T7', team:'规划', empType:'骨干员工',
+        color:'#9747FF', mainRole:'KR主责', totalHours:260, leadKrs:2, involvedKrs:4, avgScore:16,
+        leadKrList:[{name:'T/P能力焕新运营',conf:80},{name:'T序列能力体系构建',conf:79}],
+        workload:[{name:'T/P能力焕新',hours:140},{name:'T序列体系',hours:80},{name:'其他',hours:40}],
+        tasks:[
+          {id:'EXT006-T1',name:'T/P能力焕新运营推进',team:'规划',kr:'T/P能力焕新运营',imp:4,diff:3,prio:3,scope:4,score:31,status:'进行中',hours:140,isLead:true,logs:[{date:'2026-03-13',text:'于季芝 创建任务',type:'p'}]},
+        ]
+      },
+      {
+        id:'EXT007', name:'武沛多', role:'AI产品总监', level:'T9', team:'AI', empType:'团队负责人',
+        color:'#6B21A8', mainRole:'团队管理', totalHours:400, leadKrs:2, involvedKrs:8, avgScore:19,
+        leadKrList:[{name:'OpenMind建设',conf:80},{name:'构建AI原生平台能力',conf:90}],
+        workload:[{name:'OpenMind建设',hours:180},{name:'AI原生平台',hours:140},{name:'团队管理',hours:80}],
+        tasks:[
+          {id:'EXT007-T1',name:'AI大模型建设与企业运营智能体构建',team:'AI',kr:'OpenMind建设',imp:5,diff:5,prio:5,scope:5,score:45,status:'进行中',hours:196,isLead:true,logs:[{date:'2026-03-10',text:'武沛多 创建任务',type:'p'}]},
+          {id:'EXT007-T2',name:'打造一汽AI+能力中心',team:'AI',kr:'构建AI原生平台能力',imp:3,diff:5,prio:5,scope:5,score:35,status:'进行中',hours:85,isLead:true,logs:[{date:'2026-03-10',text:'武沛多 创建任务',type:'p'}]},
+        ]
+      },
+      {
+        id:'EXT008', name:'陶建尧', role:'信创工程师', level:'T8', team:'基础平台', empType:'骨干员工',
+        color:'#00808A', mainRole:'KR主责', totalHours:310, leadKrs:2, involvedKrs:6, avgScore:17,
+        leadKrList:[{name:'总部及分子公司达成8199指标要求',conf:86},{name:'组织分子公司开展2项自主可控集采',conf:90}],
+        workload:[{name:'信创迁移',hours:160},{name:'自主可控集采',hours:100},{name:'其他',hours:50}],
+        tasks:[
+          {id:'EXT008-T1',name:'推动总部及分子公司应用系统信创迁移',team:'基础平台',kr:'总部及分子公司达成8199指标要求',imp:5,diff:5,prio:5,scope:5,score:45,status:'进行中',hours:160,isLead:true,logs:[{date:'2026-03-10',text:'陶建尧 创建任务',type:'p'}]},
+        ]
+      },
+      {
+        id:'EXT009', name:'李思南', role:'组织发展工程师', level:'T7', team:'规划', empType:'骨干员工',
+        color:'#D4380D', mainRole:'KR主责', totalHours:250, leadKrs:2, involvedKrs:5, avgScore:16,
+        leadKrList:[{name:'"三者"转型推进',conf:70},{name:'T序列能力体系构建',conf:79}],
+        workload:[{name:'三者转型',hours:130},{name:'T序列体系',hours:80},{name:'其他',hours:40}],
+        tasks:[
+          {id:'EXT009-T1',name:'全员三者转型认证推进',team:'规划',kr:'"三者"转型推进',imp:4,diff:3,prio:3,scope:4,score:31,status:'进行中',hours:130,isLead:true,logs:[{date:'2026-03-13',text:'李思南 创建任务',type:'p'}]},
+        ]
+      },
+      {
+        id:'EXT010', name:'谭泽府', role:'平台产品经理', level:'T6', team:'POM', empType:'普通员工',
+        color:'#1677FF', mainRole:'KR主责', totalHours:220, leadKrs:1, involvedKrs:3, avgScore:17,
+        leadKrList:[{name:'二级子公司年内要100%上线穿透式管理平台',conf:91}],
+        workload:[{name:'穿透式管理平台',hours:160},{name:'其他',hours:60}],
+        tasks:[
+          {id:'EXT010-T1',name:'二级子公司穿透式管理平台推广',team:'POM',kr:'二级子公司年内要100%上线穿透式管理平台',imp:5,diff:4,prio:4,scope:4,score:37,status:'进行中',hours:160,isLead:true,logs:[{date:'2026-03-10',text:'谭泽府 创建任务',type:'p'}]},
+        ]
+      },
+    ]);
+
+    // ── URL param: auto-select employee from ?empId=name ──────────────────
+    const urlParams = new URLSearchParams(window.location.search);
+    const empParam  = urlParams.get('empId');
+    const initId    = empParam
+      ? (empList.value.find(e => e.name === decodeURIComponent(empParam) || e.id === empParam)?.id || '10159911')
+      : '10159911';
+
+    const curId  = ref(initId);
+    const curEmp = computed(() => empList.value.find(e => e.id === curId.value) || empList.value[0]);
+
+    // pie chart
+    let pieChart = null;
+    const initPie = () => {
+      nextTick(() => {
+        setTimeout(() => {
+          const dom = document.getElementById('pie-' + curId.value);
+          if (!dom) return;
+          if (pieChart) { pieChart.dispose(); pieChart = null; }
+          pieChart = echarts.init(dom);
+          const colors = ['#3A2AE4','#6B5DF0','#00B42A','#FF7D00','#E12535','#9747FF'];
+          pieChart.setOption({
+            backgroundColor: 'transparent',
+            tooltip: {trigger:'item', formatter:'{b}: {c}h ({d}%)'},
+            series: [{
+              type: 'pie', radius: ['42%','72%'],
+              data: curEmp.value.workload.map((w, i) => ({name:w.name, value:w.hours, itemStyle:{color:colors[i%colors.length]}})),
+              label: {fontSize:10},
+              itemStyle: {borderRadius:3, borderWidth:2, borderColor:'#fff'},
+              emphasis: {itemStyle:{shadowBlur:6}}
+            }]
+          });
+        }, 80);
+      });
+    };
+
+    watch(curId, () => { initPie(); aiEvalVisible.value = false; }, {flush:'post'});
+    const tab = ref(0);
+
+    // ── Task drawer ───────────────────────────────────────────────────────
+    const drVisible    = ref(false);
+    const drTab        = ref('edit');
+    const aiPanelVisible = ref(false);
+    const aiLoading    = ref(false);
+
+    const dims = [
+      {
+        key:'imp', label:'任务重要度', w:3,
+        rules:[
+          {s:1,l:'日常事务'},{s:2,l:'辅助支持'},{s:3,l:'常规贡献'},{s:4,l:'战略重要'},{s:5,l:'战略关键'}
+        ]
+      },
+      {
+        key:'diff', label:'任务困难度', w:3,
+        rules:[
+          {s:1,l:'常规操作'},{s:2,l:'流程执行'},{s:3,l:'专业应用'},{s:4,l:'公司攻坚'},{s:5,l:'行业攻坚'}
+        ]
+      },
+      {
+        key:'prio', label:'资源优先度', w:2,
+        rules:[
+          {s:1,l:'后台优化'},{s:2,l:'弹性安排'},{s:3,l:'计划内保障'},{s:4,l:'高价值加速'},{s:5,l:'战略卡点'}
+        ]
+      },
+      {
+        key:'scope', label:'领域范围', w:1,
+        rules:[
+          {s:1,l:'团队内级'},{s:2,l:'跨团队级'},{s:3,l:'跨部门级'},{s:4,l:'集团级'},{s:5,l:'行业级'}
+        ]
+      },
+    ];
+
+    const newForm = () => ({id:'', name:'', team:'', status:'进行中', hours:0, imp:3, diff:3, prio:3, scope:3, logs:[]});
+    const form = ref(newForm());
+    const hv   = ref({imp:0, diff:0, prio:0, scope:0});
+    const wtotal = computed(() => form.value.imp*3 + form.value.diff*3 + form.value.prio*2 + form.value.scope);
+
+    const openDr = (task) => {
+      drTab.value = 'edit';
+      aiPanelVisible.value = false;
+      form.value = Object.assign({}, task);
+      drVisible.value = true;
+    };
+
+    // AI scoring
+    const aiR = ref({imp:4, diff:4, prio:4, scope:3, wt:37, reasons:{}});
+    const triggerAI = () => {
+      aiPanelVisible.value = true;
+      aiLoading.value = true;
+      setTimeout(() => {
+        const name = form.value.name;
+        let imp=3,diff=3,prio=3,scope=2;
+        let impR='',diffR='',prioR='',scopeR='';
+
+        if (name.includes('AI') || name.includes('智能体')) { imp=5; impR='支撑部门级OKR智能化战略，具决定性影响，符合【战略关键-5分】。'; }
+        else if (name.includes('平台') || name.includes('工作台')) { imp=4; impR='支撑团队突破型OKR，有重大战略价值，符合【战略重要-4分】。'; }
+        else { imp=3; impR='团队内核心交付，支撑稳健改进型OKR，符合【常规贡献-3分】。'; }
+
+        if (name.includes('大模型') || name.includes('从0')) { diff=5; diffR='行业级难题，无前车之鉴，需从0到1创新，符合【行业攻坚-5分】。'; }
+        else if (name.includes('架构') || name.includes('平台')) { diff=4; diffR='集团内无成功案例，需整合多领域知识，符合【公司攻坚-4分】。'; }
+        else { diff=3; diffR='有参考方案但需跨团队协调与重大修改，符合【专业应用-3分】。'; }
+
+        if (imp >= 5 && diff >= 4) { prio=5; prioR='是当前战略唯一关键路径，必须立即集中资源，符合【战略卡点-5分】。'; }
+        else if (imp >= 4) { prio=4; prioR='对OKR完成有重大影响，需调配优势资源，符合【高价值加速-4分】。'; }
+        else { prio=3; prioR='有明确上下游依赖，按标准资源准时交付，符合【计划内保障-3分】。'; }
+
+        if (name.includes('集团') || name.includes('全级次')) { scope=4; scopeR='涉及集团内多部门协同，符合【集团级-4分】。'; }
+        else { scope=2; scopeR='主要在部门内跨团队协作完成，符合【跨团队级-2分】。'; }
+
+        aiR.value = {imp, diff, prio, scope, wt: imp*3+diff*3+prio*2+scope, reasons:{imp:impR, diff:diffR, prio:prioR, scope:scopeR}};
+        aiLoading.value = false;
+      }, 1800);
+    };
+
+    const adoptAI = () => {
+      form.value.imp = aiR.value.imp; form.value.diff = aiR.value.diff;
+      form.value.prio = aiR.value.prio; form.value.scope = aiR.value.scope;
+      aiPanelVisible.value = false;
+      ElementPlus.ElMessage.success('已采纳 AI 评分');
+    };
+
+    // save
+    const saveMo = ref(false);
+    const chg    = ref({reason:'', desc:''});
+    const handleSave = () => { chg.value = {reason:'', desc:''}; saveMo.value = true; };
+    const confirmSave = () => {
+      if (!chg.value.reason || !chg.value.desc) return;
+      const emp = empList.value.find(e => e.id === curId.value);
+      if (emp) {
+        const t = emp.tasks.find(x => x.id === form.value.id);
+        if (t) {
+          t.status = form.value.status; t.hours = form.value.hours;
+          t.imp = form.value.imp; t.diff = form.value.diff;
+          t.prio = form.value.prio; t.scope = form.value.scope;
+          t.score = form.value.imp*3 + form.value.diff*3 + form.value.prio*2 + form.value.scope;
+          t.logs.unshift({date: new Date().toLocaleString('zh-CN'), text:'华莹莹 修改了任务信息', type:'p', reason: chg.value.reason + ' - ' + chg.value.desc});
+        }
+      }
+      saveMo.value = false; drVisible.value = false;
+      ElementPlus.ElMessage.success('保存成功，变更已归档');
+    };
+
+    // ── AI Eval ──────────────────────────────────────────────────────────
+    const aiEvalVisible     = ref(false);
+    const aiEvalLoading     = ref(false);
+    const aiEvalLoadingText = ref('');
+    const aiEvalTexts = ['正在读取员工工时数据...','分析主责KR完成情况...','评估饱和度与健康指标...','计算协同贡献度...','生成效能诊断报告...'];
+
+    const evalDataMap = {
+      '10159911': {
+        score:78, level:'良好', levelDesc:'管理投入充分，自身产出待提升',
+        summary:'马智博作为HCM团队负责人，协同覆盖10个KR，工时340h健康。但主责KR数量为0，个人产出贡献主要体现在管理价值。',
+        dims:[{name:'战略聚焦度',icon:'🎯',score:72},{name:'产出与价值',icon:'🔥',score:70},{name:'饱和度与健康',icon:'🔋',score:88},{name:'协同与支撑',icon:'🤝',score:95}],
+        strengths:[{title:'团队协同贡献突出',body:'参与10个KR的协同支撑，覆盖O1~O6全部团队目标，体现优秀的全局统筹能力。'},{title:'工时饱和度健康',body:'本周期总工时340h，折合月均约57h，处于健康工作饱和区间。'}],
+        risks:[{title:'主责KR数量为0，缺乏可量化交付成果',body:'作为T8级团队负责人，当前主责KR数量为0，个人OKR量化贡献缺失，建议设定1-2个量化型主责KR。'}],
+        suggests:[{title:'建议：为马智博设定1-2个量化型主责KR',body:'推荐承接"团队信心指数提升"或"集团外收入达成"等可量化KR，使管理贡献可见、可衡量。'}]
+      },
+      '10079929': {
+        score:82, level:'高产出', levelDesc:'核心骨干，但存在严重过劳风险',
+        summary:'王峰是HCM团队核心骨干，主责3个KR，任务均分约17分，属于极高产出成员。但总工时高达510h，已远超标准工时1.4倍，存在严重的单点依赖和职业倦怠风险。',
+        dims:[{name:'战略聚焦度',icon:'🎯',score:88},{name:'产出与价值',icon:'🔥',score:92},{name:'饱和度与健康',icon:'🔋',score:38},{name:'协同与支撑',icon:'🤝',score:85}],
+        strengths:[{title:'主责KR交付价值极高',body:'主责的"基础人事推广"、"PeopleSoft替换"、"网络安全专项"三条KR信心均值90%以上，任务综合系数均在15分以上。'},{title:'战略聚焦度优秀',body:'工时分布中O1（39%）+O2（31%）两条主责KR吸收了总工时的70%，聚焦度远高于团队平均水平。'}],
+        risks:[{title:'严重过劳预警：本周期工时510h，超标约40%',body:'月均工时约85h，已触发过劳预警阈值（标准阈值：月均<=72h）。长期高强度工时将直接影响输出质量并带来人才流失风险。'},{title:'单点依赖风险极高：三条核心KR无备位',body:'"基础人事推广"和"PeopleSoft替换"两条涉及集团级系统迁移的核心KR，目前仅由王峰一人主责，无明确备位成员。'}],
+        suggests:[{title:'建议1：立即为王峰制定减负计划',body:'将"网络安全专项"KR转移给王世鹏主责，预计可释放约90h工时，将月均工时降至合理区间。'},{title:'建议2：为PeopleSoft替换KR指定备位负责人',body:'建议从李安（高潜员工，当前主责KR=0）中选定备位负责人，安排交接文档和知识转移。'}]
+      },
+      '10005814': {
+        score:80, level:'稳健执行', levelDesc:'双线主责，执行力强，关注收入KR进展',
+        summary:'田志伟承担O4集团外收入和O5信创两条主责KR，任务均分约17分，工时420h处于高饱和临界区间。当前O4收入0元，距1000万目标差距悬殊。',
+        dims:[{name:'战略聚焦度',icon:'🎯',score:85},{name:'产出与价值',icon:'🔥',score:82},{name:'饱和度与健康',icon:'🔋',score:65},{name:'协同与支撑',icon:'🤝',score:80}],
+        strengths:[{title:'双主责KR承接，聚焦度高',body:'田志伟主责的两条KR覆盖"集团外收入"和"信创工程"两个战略重点，工时高度集中于主责方向（O4+O5共占76%）。'}],
+        risks:[{title:'O4集团外收入实际进展0元，风险极高',body:'集团外收入KR目标1000万，当前实际收入0元，Q1已过尚无合同签订记录。信心80%与实际严重背离，全年达成概率偏低。'}],
+        suggests:[{title:'建议：组织O4专项复盘，重新评估目标可达性',body:'建议在Q2末前召集马智博、田志伟及商务资源方进行专项复盘，明确集团外客户线索来源和合同签约路径。'}]
+      },
+      '10232534': {
+        score:85, level:'聚焦高效', levelDesc:'智能体方向核心执行者，饱和度健康',
+        summary:'董玉增聚焦O3智能体建设方向，主责KR信心95%，工时投入60%集中于主责方向，饱和度健康（280h/周期），是团队中战略聚焦度最高的执行成员。',
+        dims:[{name:'战略聚焦度',icon:'🎯',score:90},{name:'产出与价值',icon:'🔥',score:85},{name:'饱和度与健康',icon:'🔋',score:82},{name:'协同与支撑',icon:'🤝',score:72}],
+        strengths:[{title:'主责KR信心95%，执行进展超预期',body:'"5个智能体、3名数字员工"当前已落地1个智能体、1名数字员工，节奏合理，是智能体方向的绝对核心执行力量。'}],
+        risks:[{title:'跨KR协同参与度相对较低',body:'参与KR数量4个，低于团队平均9个，跨方向协同贡献较少。'}],
+        suggests:[{title:'建议：适当安排董玉增参与O1工作台智能体模块',body:'O1工作台建设中有多个智能体嵌入需求，可发挥董玉增的专业优势，同时拓展其跨KR协同经验。'}]
+      },
+      '10084630': {
+        score:55, level:'资源闲置', levelDesc:'高潜员工-主责KR=0-需紧急干预',
+        summary:'李安被认定为高潜员工，但本周期主责KR数量为0，仅以"参与"方式支撑O1和O2，总工时160h处于严重低饱和状态（月均约27h，不足正常工时50%）。',
+        dims:[{name:'战略聚焦度',icon:'🎯',score:40},{name:'产出与价值',icon:'🔥',score:45},{name:'饱和度与健康',icon:'🔋',score:35},{name:'协同与支撑',icon:'🤝',score:55}],
+        strengths:[{title:'参与任务价值系数均较高',body:'所参与任务（薪酬激励平台、员工关系平台）综合系数均达19分，属于战略级高价值任务，参与方向正确。'}],
+        risks:[{title:'高潜员工-主责KR=0-资源严重闲置',body:'李安被认定为高潜员工，但当前主责KR数量为0，工时仅160h，远低于团队平均430h。高潜员工的资源闲置意味着组织在人才培养上的双重损失。'},{title:'低工时可能导致高潜员工流失风险',body:'持续低饱和状态会降低员工的成就感和归属感。若不及时干预，存在高潜人才主动离职或积极性下降的风险。'}],
+        suggests:[{title:'建议1：立即为李安指定主责KR',body:'建议将"保险年金中心功能完备"KR转移给李安主责，使其有明确可交付的量化目标。'},{title:'建议2：为李安制定高潜培养计划',body:'建议在下一周期为李安安排1-2个有挑战性的主责KR，配合马智博的定期1对1辅导，激活其高潜特质。'}]
+      },
+      EXT001: {score:88,level:'高产出',levelDesc:'数据架构核心骨干，交付价值极高',summary:'金鑫禹主责3条核心KR（数据资产目录、业务单元孪生、关键业务对象连通），任务均分约38-41分，是数据团队产出效能最高的成员。工时320h健康饱和。',dims:[{name:'战略聚焦度',icon:'🎯',score:92},{name:'产出与价值',icon:'🔥',score:90},{name:'饱和度与健康',icon:'🔋',score:85},{name:'协同与支撑',icon:'🤝',score:88}],strengths:[{title:'主责3条高价值KR，战略对齐度极高',body:'承接"全级次数据资产目录"、"关键业务对象100%连通"和"全部业务单元孪生"三条关键KR，均属集团级战略交付，信心均值91%。'}],risks:[{title:'跨团队协同压力大，需关注交付节奏',body:'3条KR均涉及跨团队协同，当前Q2节奏偏紧，建议定期Review优先级排序，防止资源分散。'}],suggests:[{title:'建议：为金鑫禹设定Q2季度里程碑检查点',body:'三条KR并行推进负荷较重，建议按季度设定明确交付里程碑，并向蒋汉卿申请1名协作资源。'}]},
+      EXT002: {score:82,level:'稳健执行',levelDesc:'数字员工建设主力，评价组织推进中',summary:'娄睿琦主责"上线数字员工20名"等3条KR，任务均分约35分，工时290h处于健康饱和区间，执行稳健。需关注数字员工认证进度。',dims:[{name:'战略聚焦度',icon:'🎯',score:85},{name:'产出与价值',icon:'🔥',score:82},{name:'饱和度与健康',icon:'🔋',score:82},{name:'协同与支撑',icon:'🤝',score:78}],strengths:[{title:'数字员工方向核心推进者',body:'"上线数字员工20名"KR信心84%，已推动多个团队完成数字员工认证准备，是全司数字员工建设的关键协调枢纽。'}],risks:[{title:'高级经理评价覆盖面挑战较大',body:'高级经理数智能力过关评价涉及全司范围，参与率需持续跟进，建议补充激励机制。'}],suggests:[{title:'建议：与各团队负责人协商数字员工优先级',body:'建议在月度全员会上专项通报数字员工认证进度，形成团队间竞比氛围，加速完成目标。'}]},
+      EXT003: {score:90,level:'高产出',levelDesc:'外部市场拓展核心力量',summary:'蒋汉卿主责"拓展标杆客户5家"等2条KR，任务均分45分，是全司产出价值系数最高的员工之一。工时380h需关注持续性。',dims:[{name:'战略聚焦度',icon:'🎯',score:92},{name:'产出与价值',icon:'🔥',score:95},{name:'饱和度与健康',icon:'🔋',score:75},{name:'协同与支撑',icon:'🤝',score:88}],strengths:[{title:'任务价值系数满分45，产出极高',body:'标杆客户拓展任务综合系数达45分，是系统内最高水平，体现了极高的战略影响力和执行复杂度。'}],risks:[{title:'工时380h接近过劳阈值，需关注健康状态',body:'当前月均工时约63h，接近72h预警阈值，且外部客户拓展进入密集期，工时可能进一步上升。'}],suggests:[{title:'建议：为蒋汉卿配备1名商务助理',body:'外部客户拓展需要大量会议和方案输出，建议从团队内抽调1名成员专职支撑商务推进，释放蒋汉卿精力聚焦高价值决策。'}]},
+      EXT004: {score:91,level:'高产出',levelDesc:'算力基础设施核心专家',summary:'贾越主责"算力集群100%国产化"和"训推连续性100%"两条KR，任务均分约43分，工时340h健康，是算力领域的绝对核心。',dims:[{name:'战略聚焦度',icon:'🎯',score:94},{name:'产出与价值',icon:'🔥',score:92},{name:'饱和度与健康',icon:'🔋',score:86},{name:'协同与支撑',icon:'🤝',score:80}],strengths:[{title:'国产算力专项执行精准，信心90%',body:'"算力集群100%国产化"信心90%，当前国产化率从64%持续提升，GPU算力兼容性测试按节奏推进。'}],risks:[{title:'单人主责两条高难度KR，知识传承风险',body:'两条KR均属行业级技术攻坚，目前仅贾越深度掌握，建议安排技术文档沉淀和备位传承。'}],suggests:[{title:'建议：建立算力专项知识库',body:'建议贾越每月输出1份技术总结文档，形成算力国产化最佳实践知识库，降低单点风险。'}]},
+      EXT005: {score:85,level:'聚焦高效',levelDesc:'安全领域核心负责人',summary:'王晶宝主责安全成熟度提升和网络安全重大事件防控两条KR，信心均值85%，工时300h健康，是安全专项的可靠执行者。',dims:[{name:'战略聚焦度',icon:'🎯',score:88},{name:'产出与价值',icon:'🔥',score:85},{name:'饱和度与健康',icon:'🔋',score:84},{name:'协同与支撑',icon:'🤝',score:82}],strengths:[{title:'安全KR稳步推进，现重大事件0次',body:'"网络安全重大事件零发生"当前保持0次，体现了稳健的安全防控能力和严谨的工作态度。'}],risks:[{title:'安全成熟度3.2指标达成需加速推广',body:'全量二级公司功能推广率68%，距100%目标尚有差距，Q3推广节奏需加速。'}],suggests:[{title:'建议：与各分子公司安全联络人建立周同步机制',body:'建议建立每周安全进展同步机制，及时发现推广阻塞点，提高分子公司配合度。'}]},
+      EXT006: {score:78,level:'稳健推进',levelDesc:'组织能力焕新核心执行者',summary:'于季芝主责T/P能力焕新运营和T序列能力体系两条KR，当前信心约80%，工时260h健康，推进稳健但分子公司配合度不足是主要风险。',dims:[{name:'战略聚焦度',icon:'🎯',score:82},{name:'产出与价值',icon:'🔥',score:78},{name:'饱和度与健康',icon:'🔋',score:85},{name:'协同与支撑',icon:'🤝',score:72}],strengths:[{title:'总部能力焕新率稳步提升',body:'T/P能力焕新在总部已完成基础推广，勋章体系建设正在落地，执行节奏符合预期。'}],risks:[{title:'分子公司五人组配置率0%，存在滞后风险',body:'分子公司T/P五人组配置率当前0%，全年目标100%，推进难度极高，需要管理层介入协调。'}],suggests:[{title:'建议：推动分子公司"1+1"结对帮扶机制',body:'建议总部为每家分子公司指定1名帮扶联络人，协助完成五人组配置，形成"帮带"机制加速推广。'}]},
+      EXT007: {score:87,level:'高产出',levelDesc:'AI智能体战略核心驱动者',summary:'武沛多主责OpenMind建设和AI原生平台能力两条战略级KR，任务均分约40分，工时400h略高，是AI智能体方向的核心战略驱动者。',dims:[{name:'战略聚焦度',icon:'🎯',score:90},{name:'产出与价值',icon:'🔥',score:90},{name:'饱和度与健康',icon:'🔋',score:72},{name:'协同与支撑',icon:'🤝',score:88}],strengths:[{title:'OpenMind战略执行力强，智能体体系初具规模',body:'1+7+X智能体体系已完成框架搭建，行业大模型72B版发布内测，AIAP平台准确率60%持续提升中。'}],risks:[{title:'工时400h较高，团队负责人需关注可持续性',body:'当前月均工时约67h，接近预警区间，且AI研发进入密集攻坚期，建议评估任务可转移项。'}],suggests:[{title:'建议：为武沛多的管理工作设定"减法"计划',body:'建议将部分日常团队管理事务委托给高潜员工魏旭，使武沛多聚焦OpenMind核心技术决策。'}]},
+      EXT008: {score:83,level:'稳健执行',levelDesc:'信创工程主力推进者',summary:'陶建尧主责信创迁移和自主可控集采两条KR，信心均值88%，工时310h健康，是信创工程最可靠的执行力量。',dims:[{name:'战略聚焦度',icon:'🎯',score:86},{name:'产出与价值',icon:'🔥',score:84},{name:'饱和度与健康',icon:'🔋',score:82},{name:'协同与支撑',icon:'🤝',score:80}],strengths:[{title:'信创KR信心双高，执行落地扎实',body:'两条信创KR信心均在86-90%之间，新增自主可控占比85%，三类应用系统推进率均超80%。'}],risks:[{title:'分子公司推广协调复杂度高',body:'自主可控集采工作需协调多家分子公司，各地政策差异和采购周期长是主要挑战。'}],suggests:[{title:'建议：建立信创集采标准化采购模板',body:'建议陶建尧牵头制定可复用的自主可控集采标准模板，降低分子公司操作难度，加速推广速度。'}]},
+      EXT009: {score:76,level:'稳健推进',levelDesc:'组织能力转型核心推进者',summary:'李思南主责"三者"转型推进和T序列能力体系两条KR，当前信心75-79%，工时250h健康，但三者认证进度滞后是主要风险点。',dims:[{name:'战略聚焦度',icon:'🎯',score:80},{name:'产出与价值',icon:'🔥',score:76},{name:'饱和度与健康',icon:'🔋',score:85},{name:'协同与支撑',icon:'🤝',score:74}],strengths:[{title:'T序列能力体系已初步建立',body:'T序列能力标准已完成制定，数个团队已开展COM接口自动化培训，体系建设正在推进。'}],risks:[{title:'"三者"认证进度滞后，认证率0%',body:'全员"三者"转型推进当前认证率0%，年内完成M2/M1级过关评价难度较高，需提前做预期管理。'}],suggests:[{title:'建议：分阶段设定三者认证里程碑',body:'建议将年度目标拆解为Q2启动认证平台、Q3完成50%覆盖、Q4全面达标三阶段，各阶段设定考核节点。'}]},
+      EXT010: {score:81,level:'聚焦高效',levelDesc:'穿透式平台推广骨干',summary:'谭泽府主责"二级子公司穿透式管理平台100%上线"这一高难度KR，信心91%，工时220h健康，是POM穿透式管理平台向分子公司推广的核心骨干。',dims:[{name:'战略聚焦度',icon:'🎯',score:90},{name:'产出与价值',icon:'🔥',score:84},{name:'饱和度与健康',icon:'🔋',score:88},{name:'协同与支撑',icon:'🤝',score:75}],strengths:[{title:'穿透式平台推广信心91%，执行稳健',body:'大司库全级次当前87%应用，推广节奏良好，协调各分子公司上线工作有序推进中。'}],risks:[{title:'末尾3%分子公司推广阻力较大',body:'剩余未覆盖的分子公司通常是业务最复杂、配合度最低的单位，最后一公里推广难度可能超预期。'}],suggests:[{title:'建议：对尾部分子公司启动专项攻坚',body:'建议成立穿透式平台推广专项小组，由谭泽府牵头，集中资源在Q3末完成最后3%的分子公司覆盖。'}]},
+    };
+
+    const evalData = computed(() => evalDataMap[curId.value] || evalDataMap['10159911']);
+
+    let radarChart = null;
+    const initRadar = () => {
+      nextTick(() => {
+        setTimeout(() => {
+          const domId = 'eval-radar-' + curId.value;
+          const dom = document.getElementById(domId);
+          if (!dom) return;
+          if (radarChart) { radarChart.dispose(); radarChart = null; }
+          radarChart = echarts.init(dom);
+          const d = evalData.value;
+          const scoreColor = d.score >= 85 ? '#00B42A' : d.score >= 70 ? '#FF7D00' : '#E12535';
+          radarChart.setOption({
+            backgroundColor: 'transparent',
+            radar: {
+              indicator: [{name:'战略聚焦度',max:100},{name:'产出与价值',max:100},{name:'饱和度与健康',max:100},{name:'协同与支撑',max:100}],
+              radius: '62%',
+              axisName: {color:'#666672', fontSize:12},
+              splitLine: {lineStyle:{color:['#E5E6EB']}},
+              splitArea: {areaStyle:{color:['rgba(58,42,228,.03)','rgba(58,42,228,.06)']}},
+              axisLine: {lineStyle:{color:'#E5E6EB'}}
+            },
+            series: [{
+              type: 'radar',
+              data: [{
+                value: d.dims.map(d2 => d2.score),
+                name: curEmp.value.name,
+                areaStyle: {color: scoreColor + '22'},
+                lineStyle: {color: scoreColor, width:2},
+                itemStyle: {color: scoreColor},
+                symbol: 'circle', symbolSize: 6,
+              }]
+            }],
+            tooltip: {trigger:'item'}
+          });
+        }, 120);
+      });
+    };
+
+    const openAiEval = () => {
+      aiEvalVisible.value = true;
+      aiEvalLoading.value = true;
+      let idx = 0;
+      aiEvalLoadingText.value = aiEvalTexts[0];
+      const t = setInterval(() => {
+        idx++;
+        if (idx < aiEvalTexts.length) aiEvalLoadingText.value = aiEvalTexts[idx];
+        else { clearInterval(t); aiEvalLoading.value = false; initRadar(); }
+      }, 600);
+    };
+
+    // init on mount
+    nextTick(() => { setTimeout(initPie, 200); });
+
+    // ── Topology chart ────────────────────────────────────────────────────
+    const topoNodeCount = ref(0);
+    let topoChart = null;
+
+    // Per-employee 6-layer chain data
+    const topoChains = {
+      '10159911': {
+        strat:  {id:'S1', name:'年度重点工作\n数智化大会决策'},
+        deptO:  {id:'DO1', name:'产品链工作台\n建设与运营'},
+        deptKr: {id:'DK1', name:'全部业务单元孪生'},
+        teamO:  {id:'TO1', name:'【O1】HCM产品链\n工作台建设与运营'},
+        teamKr: {id:'TK1', name:'HCM产品迭代'},
+        tasks:  [{id:'T961',name:'HRM战队级任务',hours:174},{id:'T116',name:'培训赋能作业平台',hours:88},{id:'T909',name:'招募配置作业平台',hours:62}]
+      },
+      '10005814': {
+        strat:  {id:'S2', name:'年度重点工作\n531战略'},
+        deptO:  {id:'DO4', name:'数智产品服务'},
+        deptKr: {id:'DK4', name:'拓展标杆客户5家\n营收达成1.1亿'},
+        teamO:  {id:'TO4', name:'【O4】HCM产品链\n集团外收入1000万'},
+        teamKr: {id:'TK4', name:'HCM产品链集团\n外收入1000万'},
+        tasks:  [{id:'T941',name:'薪酬激励作业平台',hours:95},{id:'T960',name:'应用系统运维',hours:60},{id:'T901',name:'HRM运营工作台',hours:40}]
+      },
+      '10079929': {
+        strat:  {id:'S1b', name:'年度重点工作'},
+        deptO:  {id:'DO1b', name:'全级次穿透式\n经营管控体系'},
+        deptKr: {id:'DK1b', name:'全级次数据资产\n目录覆盖率'},
+        teamO:  {id:'TO1b', name:'【O1】HCM产品链\n工作台建设与运营'},
+        teamKr: {id:'TK1b', name:'基础人事中心\n推广完成率100%'},
+        tasks:  [{id:'T956',name:'员工关系作业平台',hours:180},{id:'T960b',name:'应用系统运维',hours:90},{id:'T938',name:'员工能力作业平台',hours:140}]
+      },
+      '10232534': {
+        strat:  {id:'S3', name:'年度重点工作\n数智化大会决策'},
+        deptO:  {id:'DO3', name:'建成企业运营\n智能体OpenMind'},
+        deptKr: {id:'DK3', name:'上线数字员工20名'},
+        teamO:  {id:'TO3', name:'【O3】HCM产品链\n智能体建设'},
+        teamKr: {id:'TK3', name:'5个智能体\n3名数字员工'},
+        tasks:  [{id:'T191',name:'薪酬激励作业平台',hours:120},{id:'T940',name:'干部管理作业平台',hours:90},{id:'T938b',name:'员工能力作业平台',hours:70}]
+      },
+      '10084630': {
+        strat:  {id:'S1c', name:'年度重点工作'},
+        deptO:  {id:'DO1c', name:'产品链工作台\n建设与运营'},
+        deptKr: {id:'DK1c', name:'全部业务单元孪生'},
+        teamO:  {id:'TO1c', name:'【O1】HCM产品链\n工作台建设与运营'},
+        teamKr: {id:'TK1c', name:'基础人事中心\n推广完成率100%'},
+        tasks:  [{id:'T941b',name:'薪酬激励作业平台',hours:80},{id:'T956b',name:'员工关系作业平台',hours:80}]
+      },
+    };
+
+    const initTopo = () => {
+      nextTick(() => {
+        setTimeout(() => {
+          const dom = document.getElementById('topo-chart');
+          if (!dom) return;
+          if (topoChart) { topoChart.dispose(); topoChart = null; }
+          topoChart = echarts.init(dom);
+          const chain = topoChains[curId.value] || topoChains['10159911'];
+          const W = dom.offsetWidth || 860;
+          const cx = W / 2;
+          const Y = [60, 170, 280, 390, 490, 610];
+          const tCount = chain.tasks.length;
+          const tSpacing = Math.min(220, (W - 100) / Math.max(tCount, 1));
+          const tStartX = cx - ((tCount - 1) * tSpacing) / 2;
+
+          const nodes = [
+            {id:chain.strat.id,  name:chain.strat.name,  x:cx, y:Y[0], symbolSize:[180,52], itemStyle:{color:'#6B5DF0',borderRadius:10}, label:{color:'#fff',fontSize:11,fontWeight:600}, layer:1},
+            {id:chain.deptO.id,  name:chain.deptO.name,  x:cx, y:Y[1], symbolSize:[200,52], itemStyle:{color:'#3A2AE4',borderRadius:10}, label:{color:'#fff',fontSize:11,fontWeight:600}, layer:2},
+            {id:chain.deptKr.id, name:chain.deptKr.name, x:cx, y:Y[2], symbolSize:[220,48], itemStyle:{color:'#F4F5FB',borderColor:'#C5C0F8',borderWidth:2,borderRadius:8}, label:{color:'#3A2AE4',fontSize:11,fontWeight:500}, layer:3},
+            {id:chain.teamO.id,  name:chain.teamO.name,  x:cx, y:Y[3], symbolSize:[200,52], itemStyle:{color:'#00B42A',borderRadius:10}, label:{color:'#fff',fontSize:11,fontWeight:600}, layer:4},
+            {id:chain.teamKr.id, name:chain.teamKr.name, x:cx, y:Y[4], symbolSize:[220,48], itemStyle:{color:'#F4F5FB',borderColor:'#95DE64',borderWidth:2,borderRadius:8}, label:{color:'#00B42A',fontSize:11,fontWeight:500}, layer:5},
+            ...chain.tasks.map((t, i) => ({
+              id:t.id, name:t.name + '\n' + t.hours + 'h',
+              x: tStartX + i * tSpacing, y: Y[5],
+              symbolSize:[160,54],
+              itemStyle:{color:'#FFF7E8',borderColor:'#FF7D00',borderWidth:2.5,borderRadius:8},
+              label:{color:'#875800',fontSize:10,fontWeight:600},
+              layer:6
+            }))
+          ];
+
+          const edges = [
+            {source:chain.strat.id,  target:chain.deptO.id},
+            {source:chain.deptO.id,  target:chain.deptKr.id},
+            {source:chain.deptKr.id, target:chain.teamO.id},
+            {source:chain.teamO.id,  target:chain.teamKr.id},
+            ...chain.tasks.map(t => ({source:chain.teamKr.id, target:t.id}))
+          ];
+
+          topoNodeCount.value = nodes.length;
+
+          topoChart.setOption({
+            backgroundColor: '#FAFBFF',
+            tooltip: {
+              trigger: 'item',
+              formatter: (params) => {
+                if (params.dataType === 'node') {
+                  const layerNames = ['','战略源','部门O','部门KR','团队O','团队KR','我的任务'];
+                  return '<div style="font-size:12px;max-width:200px"><b>' + params.name.replace(/\n/g,'<br>') + '</b><br><span style="color:#999">层级：' + (layerNames[params.data.layer]||'') + '</span></div>';
+                }
+                return '';
+              },
+              backgroundColor: '#fff', borderColor: '#E5E6EB',
+              textStyle: {color:'#262629'}
+            },
+            series: [{
+              type: 'graph', layout: 'none', roam: true, zoom: 0.88,
+              center: [cx, 340], symbol: 'roundRect',
+              nodes: nodes.map(n => ({
+                ...n, value: n.layer,
+                label: {show:true, ...n.label, formatter:n.name, lineHeight:16},
+                emphasis: {itemStyle:{shadowBlur:12,shadowColor:'rgba(58,42,228,.25)'}}
+              })),
+              edges: edges.map(e => ({...e, lineStyle:{color:'#C5C0F8',width:2}, symbol:['none','arrow'], symbolSize:[0,8]})),
+              emphasis: {focus:'adjacency', lineStyle:{width:3.5, color:'#3A2AE4'}},
+            }]
+          });
+        }, 120);
+      });
+    };
+
+    const switchTopo = () => { tab.value = 1; setTimeout(initTopo, 150); };
+    const resetTopo  = () => { if (topoChart) { topoChart.dispose(); topoChart = null; } initTopo(); };
+
+    return {
+      navItems, goNav,
+      roleOpts, curRole, canSwitch, canEdit, empTypeTagClass, scoreClass, stClass,
+      empList, curId, curEmp, tab,
+      topoNodeCount, switchTopo, resetTopo,
+      drVisible, drTab, form, hv, dims, wtotal, openDr,
+      aiPanelVisible, aiLoading, aiR, triggerAI, adoptAI,
+      saveMo, chg, handleSave, confirmSave,
+      aiEvalVisible, aiEvalLoading, aiEvalLoadingText, evalData, openAiEval,
+    };
+  }
+}).use(ElementPlus).mount('#app');
+</script>
+</body>
+</html>
